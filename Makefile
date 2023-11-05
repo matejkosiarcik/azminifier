@@ -1,0 +1,31 @@
+# Helper Makefile to group scripts for development
+
+MAKEFLAGS += --warn-undefined-variables
+SHELL := /bin/sh
+.SHELLFLAGS := -ec
+PROJECT_DIR := $(abspath $(dir $(MAKEFILE_LIST)))
+
+.POSIX:
+.SILENT:
+
+.DEFAULT: all
+.PHONY: all
+all: clean bootstrap build test docker-build
+
+.PHONY: bootstrap
+bootstrap:
+	printf '%s\0%s\0' . minifiers | \
+		xargs -0 -P0 -n1 npm ci --no-save --no-progress --no-audit --quiet --prefix
+
+.PHONY: test
+test:
+	npm test
+
+.PHONY: build
+build:
+	npm run build
+
+.PHONY: clean
+clean:
+	rm -rf "$(PROJECT_DIR)/node_modules" \
+		"$(PROJECT_DIR)/minifiers/node_modules"
