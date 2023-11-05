@@ -13,7 +13,7 @@ function getYamlVersion(yamlContent) {
     }
 }
 
-function stringifyYaml(value, version) {
+function stringifyYaml(value, depth, version) {
     if (typeof value === 'string') {
         const output = YAML.stringify(value.trim())
             .trim()
@@ -30,13 +30,16 @@ function stringifyYaml(value, version) {
     } else if (value === null) {
         return 'null';
     } else if (Array.isArray(value)) {
-        const content = value.map((el) => stringifyYaml(el)).join(',');
+        const content = value.map((el) => stringifyYaml(el, depth + 1, version)).join(',');
         return `[${content}]`;
     } else {
-        const content = Object.keys(value).map((key) => {
-            return `${key}: ${stringifyYaml(value[key])}`;
-        }).join(',');
-        return `{${content}}`;
+        let content = Object.keys(value).map((key) => {
+            return `${key}: ${stringifyYaml(value[key], depth + 1, version)}`;
+        }).join(depth > 0 ? ',' : '\n');
+        if (depth > 0) {
+            content = `{${content}}`;
+        }
+        return content;
     }
 }
 
@@ -52,7 +55,7 @@ function stringifyYaml(value, version) {
     }
     const yamlObject = YAML.parse(yamlContent, yamlOptions);
 
-    let minifiedYamlContent = stringifyYaml(yamlObject, version);
+    let minifiedYamlContent = stringifyYaml(yamlObject, 0, version);
     if (version) {
         minifiedYamlContent = `%YAML ${version}\n---\n${minifiedYamlContent}`;
     }

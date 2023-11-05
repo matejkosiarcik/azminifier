@@ -119,4 +119,45 @@ context('Minify YAML', function () {
             });
         }
     }
+
+    const arrayAndObjectTests = [
+        {
+            name: 'array',
+            input: ' [ foo, bar, 123 ] ',
+            output: '[foo,bar,123]',
+        },
+        {
+            name: 'object',
+            input: 'foo: \n  key: value\n  key2: "value2"',
+            output: 'foo: {key: value,key2: value2}',
+        },
+        {
+            name: 'object with curly braces',
+            input: '{ foo: { key: value, key2: "value2" }}',
+            output: 'foo: {key: value,key2: value2}',
+        },
+        {
+            name: 'object with curly braces',
+            input: 'foo:\n  key: value\nbar:\n  key2: value2\n',
+            output: 'foo: {key: value}\nbar: {key2: value2}',
+        },
+    ];
+    for (const test of arrayAndObjectTests) {
+        it(`Test minifying ${test.name}`, async () => {
+            await performTest(test.input, test.output);
+        });
+    }
+
+    const complexTests = [
+        {
+            name: '1',
+            input: 'key:\n  - "foo bar"\n  - key: val',
+            output: 'key: [foo bar,{key: val}]',
+        }
+    ];
+    for (const test of complexTests) {
+        it(`Test minifying complex structure ${test.name}`, async () => {
+            await performTest(test.input, test.output);
+        });
+    }
 });
