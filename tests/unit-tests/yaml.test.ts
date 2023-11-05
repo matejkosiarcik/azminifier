@@ -4,15 +4,26 @@ import path from 'path';
 import process from 'process';
 import { minifyYaml } from '../../src/minifiers.js';
 import { expect } from 'chai';
-import { test } from 'mocha';
+
+async function performTest(input: string, output: string) {
+    await fs.writeFile('file.yml', input, 'utf8');
+
+    const returnCode = await minifyYaml('file.yml');
+    expect(returnCode, 'File should be minified successfully with exit status 0').eq(true);
+
+    const minifiedContent = await fs.readFile('file.yml', 'utf8');
+    expect(minifiedContent, 'File should be minified as expected').eq(output);
+
+    const returnCode2 = await minifyYaml('file.yml');
+    expect(returnCode2, 'File should be minified successfully again with exit status 0').eq(true);
+
+    const minifiedContent2 = await fs.readFile('file.yml', 'utf8');
+    expect(minifiedContent2, 'File should be minified as expected again').eq(output);
+}
 
 context('Minify YAML', function () {
     let tmpDir: string;
     let currDir: string;
-
-    test('foo', async function () {
-        console.log('Running test');
-    });
 
     this.beforeEach(async function () {
         currDir = process.cwd();
@@ -52,6 +63,11 @@ context('Minify YAML', function () {
             output: 'foo',
         },
         {
+            name: 'quoted string',
+            input: ' "foo" ',
+            output: 'foo',
+        },
+        {
             name: 'multiline string',
             input: ' foo \n bar ',
             output: 'foo bar',
@@ -59,27 +75,18 @@ context('Minify YAML', function () {
     ];
     for (const test of scalarTests) {
         it(`Test minifying scalars - ${test.name}`, async () => {
-            await fs.writeFile('file.yml', test.input, 'utf8');
-
-            const returnCode = await minifyYaml('file.yml');
-            expect(returnCode, 'File should be minified successfully with exit status 0').eq(true);
-
-            const minifiedContent = await fs.readFile('file.yml', 'utf8');
-            expect(minifiedContent, 'File should be minified as expected').eq(test.output);
+            await performTest(test.input, test.output);
         });
     }
-
 
     const booleanTests = [
         {
             name: 'positive',
-            // inputs: ['ON', 'On', 'on', 'YES', 'Yes', 'yes', 'TRUE', 'True', 'true', 'Y', 'y'],
             inputs: ['TRUE', 'True', 'true'],
             output: 'true',
         },
         {
             name: 'negative',
-            // inputs: ['OFF', 'Off', 'off', 'NO', 'No', 'no', 'FALSE', 'False', 'false', 'N', 'n'],
             inputs: ['FALSE', 'False', 'false'],
             output: 'false',
         },
@@ -87,13 +94,28 @@ context('Minify YAML', function () {
     for (const testType of booleanTests) {
         for (const input of testType.inputs) {
             it(`Test minifying booleans - ${testType.name} - "${input}"`, async () => {
-                await fs.writeFile('file.yml', ` ${input} `, 'utf8');
+                await performTest(` ${input} `, testType.output);
+            });
+        }
+    }
 
-                const returnCode = await minifyYaml('file.yml');
-                expect(returnCode, 'File should be minified successfully with exit status 0').eq(true);
-
-                const minifiedContent = await fs.readFile('file.yml', 'utf8');
-                expect(minifiedContent, 'File should be minified as expected').eq(testType.output);
+    const booleanTestsForYaml11 = [
+        {
+            name: 'positive',
+            inputs: ['ON', 'On', 'on', 'YES', 'Yes', 'yes', 'TRUE', 'True', 'true', 'Y', 'y'],
+            output: 'y',
+        },
+        {
+            name: 'negative',
+            inputs: ['OFF', 'Off', 'off', 'NO', 'No', 'no', 'FALSE', 'False', 'false', 'N', 'n'],
+            output: 'n',
+        },
+    ];
+    for (const testType of booleanTestsForYaml11) {
+        for (const input of testType.inputs) {
+            it(`Test minifying booleans - YAML 1.1 ${testType.name} - "${input}"`, async () => {
+                const versionPrefix = '%YAML 1.1\n---\n';
+                await performTest(`${versionPrefix} ${input} `, `${versionPrefix}${testType.output}`);
             });
         }
     }

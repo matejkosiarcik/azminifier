@@ -2,47 +2,65 @@ const fs = require('fs');
 const process = require('process');
 const YAML = require('yaml');
 
-const yamlFile = process.argv.at(-1);
-const yamlContent = fs.readFileSync(yamlFile, 'utf8');
-const yamlObject = YAML.parse(yamlContent);
+function getYamlVersion(yamlContent) {
+    const firstLine = yamlContent.split('\n')[0].trim();
+    if (/^%YAML 1.1\s*$/.test(firstLine)) {
+        return '1.1';
+    } else if (/^%YAML 1.2\s*$/.test(firstLine)) {
+        return '1.2';
+    } else {
+        return null;
+    }
+}
 
-function stringifyYaml(value) {
-    console.log(`JSON: ${JSON.stringify(value)}`);
-
+function stringifyYaml(value, version) {
     if (typeof value === 'string') {
-        console.log(`String: "${value}"`);
         const output = YAML.stringify(value.trim())
             .trim()
             .replace(/^\|-?/, '')
             .trim()
             .replaceAll('\n', '\\n');
-        console.log(`Return string: "${output}"`);
         return output;
     } else if (typeof value === 'number') {
-        console.log(`Number: ${value}`);
         return value.toString();
     } else if (typeof value === 'boolean') {
-        console.log(`Boolean: ${value}`);
-        return value ? 'true' : 'false';
+        const positiveValue = version === '1.1' ? 'y' : 'true';
+        const negativeValue = version === '1.1' ? 'n' : 'false';
+        return value ? positiveValue : negativeValue;
     } else if (value === null) {
-        console.log(`Null`);
         return 'null';
     } else if (Array.isArray(value)) {
-        console.log(`Array: ${JSON.stringify(value)}`);
         const content = value.map((el) => stringifyYaml(el)).join(',');
         return `[${content}]`;
     } else {
-        console.log(`Object: ${JSON.stringify(value)}`);
         const content = Object.keys(value).map((key) => {
-            console.log(`Key: ${key}`);
             return `${key}: ${stringifyYaml(value[key])}`;
         }).join(',');
         return `{${content}}`;
     }
 }
 
-const minifiedYamlContent = stringifyYaml(yamlObject);
-console.log('Minified:', minifiedYamlContent);
-if (minifiedYamlContent.length < yamlContent.length) {
+// main
+(() => {
+    const yamlFile = process.argv.at(-1);
+    const yamlContent = fs.readFileSync(yamlFile, 'utf8');
+
+    const version = getYamlVersion(yamlContent);
+    const yamlOptions = {};
+    if (version) {
+        yamlOptions.version = version;
+    }
+    const yamlObject = YAML.parse(yamlContent, yamlOptions);
+
+    let minifiedYamlContent = stringifyYaml(yamlObject, version);
+    if (version) {
+        minifiedYamlContent = `%YAML ${version}\n---\n${minifiedYamlContent}`;
+    }
     fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');
-}
+
+    if (minifiedYamlContent.length < yamlContent.length) {
+        fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');
+    } else {
+        console.error(`File at ${yamlFile} couldn't be minified`);
+    }
+})();
