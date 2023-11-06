@@ -15,12 +15,11 @@ function getYamlVersion(yamlContent) {
 
 function stringifyYaml(value, depth, version) {
     if (typeof value === 'string') {
-        const output = YAML.stringify(value.trim())
+        return YAML.stringify(value.trim())
             .trim()
             .replace(/^\|-?/, '')
             .trim()
             .replaceAll('\n', '\\n');
-        return output;
     } else if (typeof value === 'number') {
         return value.toString();
     } else if (typeof value === 'boolean') {
@@ -59,7 +58,6 @@ function stringifyYaml(value, depth, version) {
     if (version) {
         minifiedYamlContent = `%YAML ${version}\n---\n${minifiedYamlContent}`;
     }
-    fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');
 
     if (minifiedYamlContent.length < yamlContent.length) {
         fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');

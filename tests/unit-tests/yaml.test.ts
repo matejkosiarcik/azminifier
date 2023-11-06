@@ -69,14 +69,29 @@ context('Minify YAML', function () {
             output: '1.9',
         },
         {
-            name: 'basic string',
+            name: 'unquoted string',
             input: ' foo ',
             output: 'foo',
         },
         {
-            name: 'quoted string',
+            name: 'quoted string (double-quotes)',
             input: ' "foo" ',
             output: 'foo',
+        },
+        {
+            name: 'quoted string (single-quotes)',
+            input: " 'foo' ",
+            output: 'foo',
+        },
+        {
+            name: 'complex quoted string (double-quotes)',
+            input: ' "this \\"is\\" \'sparta\'" ',
+            output: 'this "is" \'sparta\'',
+        },
+        {
+            name: 'complex quoted string (single-quotes)',
+            input: " 'this \"is\"' ",
+            output: 'this "is"',
         },
         {
             name: 'multiline string',
@@ -198,6 +213,44 @@ context('Minify YAML', function () {
         });
 
         it(`Test minifying ${test.name} - YAML 1.2`, async () => {
+            const versionPrefix = '%YAML 1.2\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
+    }
+
+    const multilineStringTests = [
+        {
+            name: '1',
+            input: 'foo: "foo\n    bar"',
+            output: 'foo: foo bar',
+        },
+        {
+            name: '2',
+            input: "foo: 'foo\n    bar'",
+            output: 'foo: foo bar',
+        },
+        {
+            name: '3',
+            input: "foo: foo\n    bar",
+            output: 'foo: foo bar',
+        },
+        // {
+        //     name: '4',
+        //     input: "foo: | \n  foo \n  bar \n",
+        //     output: 'foo: |\n  foo\n  bar',
+        // },
+    ];
+    for (const test of multilineStringTests) {
+        it(`Test minifying multiline string ${test.name}`, async () => {
+            await performTest(test.input, test.output);
+        });
+
+        it(`Test minifying multiline string ${test.name} - YAML 1.1`, async () => {
+            const versionPrefix = '%YAML 1.1\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
+
+        it(`Test minifying multiline string ${test.name} - YAML 1.2`, async () => {
             const versionPrefix = '%YAML 1.2\n---\n';
             await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
         });
