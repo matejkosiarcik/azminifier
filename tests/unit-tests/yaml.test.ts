@@ -88,6 +88,16 @@ context('Minify YAML', function () {
         it(`Test minifying scalars - ${test.name}`, async () => {
             await performTest(test.input, test.output);
         });
+
+        it(`Test minifying scalars - ${test.name} - YAML 1.1`, async () => {
+            const versionPrefix = '%YAML 1.1\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
+
+        it(`Test minifying scalars - ${test.name} - YAML 1.2`, async () => {
+            const versionPrefix = '%YAML 1.2\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
     }
 
     const booleanTestsForSafeBooleans = [
@@ -110,14 +120,14 @@ context('Minify YAML', function () {
                 await performTest(` ${input} `, testType.outputYaml12);
             });
 
-            it(`Test minifying booleans - YAML 1.1 - ${testType.name} - "${input}"`, async () => {
+            it(`Test minifying booleans - ${testType.name} - "${input}" - YAML 1.1`, async () => {
                 const versionPrefix = '%YAML 1.1\n---\n';
-                await performTest(`${versionPrefix} ${input} `, `${versionPrefix}${testType.outputYaml11}`);
+                await performTest(`${versionPrefix}${input} `, `${versionPrefix}${testType.outputYaml11}`);
             });
 
-            it(`Test minifying booleans - YAML 1.2 - ${testType.name} - "${input}"`, async () => {
+            it(`Test minifying booleans - ${testType.name} - "${input}" - YAML 1.2`, async () => {
                 const versionPrefix = '%YAML 1.2\n---\n';
-                await performTest(`${versionPrefix} ${input} `, `${versionPrefix}${testType.outputYaml12}`);
+                await performTest(`${versionPrefix}${input} `, `${versionPrefix}${testType.outputYaml12}`);
             });
         }
     }
@@ -136,16 +146,28 @@ context('Minify YAML', function () {
     ];
     for (const testType of booleanTestsForYaml11) {
         for (const input of testType.inputs) {
-            it(`Test minifying booleans - YAML 1.1 ${testType.name} - "${input}"`, async () => {
+            it(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.1`, async () => {
                 const versionPrefix = '%YAML 1.1\n---\n';
-                await performTest(`${versionPrefix} ${input} `, `${versionPrefix}${testType.output}`);
+                await performTest(`${versionPrefix}${input} `, `${versionPrefix}${testType.output}`);
             });
+
+            if (!['false', 'true'].includes(input.toLowerCase())) {
+                it(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.2`, async () => {
+                    const versionPrefix = '%YAML 1.2\n---\n';
+                    await performTest(`${versionPrefix}${input} `, `${versionPrefix}${input}`);
+                });
+            }
         }
     }
 
     const arrayAndObjectTests = [
         {
-            name: 'array',
+            name: 'multiline array',
+            input: '- foo\n- bar  \n- 123',
+            output: '[foo,bar,123]',
+        },
+        {
+            name: 'oneline array',
             input: ' [ foo, bar, 123 ] ',
             output: '[foo,bar,123]',
         },
@@ -169,6 +191,16 @@ context('Minify YAML', function () {
         it(`Test minifying ${test.name}`, async () => {
             await performTest(test.input, test.output);
         });
+
+        it(`Test minifying ${test.name} - YAML 1.1`, async () => {
+            const versionPrefix = '%YAML 1.1\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
+
+        it(`Test minifying ${test.name} - YAML 1.2`, async () => {
+            const versionPrefix = '%YAML 1.2\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
     }
 
     const complexTests = [
@@ -176,11 +208,26 @@ context('Minify YAML', function () {
             name: '1',
             input: 'key:\n  - "foo bar"\n  - key: val',
             output: 'key: [foo bar,{key: val}]',
+        },
+        {
+            name: '2',
+            input: 'key:\n    - "foo bar"\n    - key: val',
+            output: 'key: [foo bar,{key: val}]',
         }
     ];
     for (const test of complexTests) {
         it(`Test minifying complex structure ${test.name}`, async () => {
             await performTest(test.input, test.output);
+        });
+
+        it(`Test minifying complex structure ${test.name} - YAML 1.1`, async () => {
+            const versionPrefix = '%YAML 1.1\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+        });
+
+        it(`Test minifying complex structure ${test.name} - YAML 1.2`, async () => {
+            const versionPrefix = '%YAML 1.2\n---\n';
+            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
         });
     }
 });
