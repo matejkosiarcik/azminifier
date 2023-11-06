@@ -59,11 +59,13 @@ removeEmptyDirectories node_modules
 
 ### Minify files ###
 
-minifyJsonFiles node_modules
-
+# TODO: Install jq and remove these unecessary keys
 # Remove extra keys from `package.json`s
-find node_modules -iname 'package.json' | while read -r file; do
-    jq -c '. | to_entries | map(select(.key | test("^(description|engine|engines|exports|imports|main|module|name|type|version)$"))) | from_entries' <"$file" | sponge "$file"
-done
+# find node_modules -iname 'package.json' | while read -r file; do
+#     jq -c '. | to_entries | map(select(.key | test("^(description|engine|engines|exports|imports|main|module|name|type|version)$"))) | from_entries' <"$file" | sponge "$file"
+# done
 
-minifyYamlFiles node_modules
+# TODO: Add back YAML and JSON minification (probably using this package)
+
+# minifyJsonFiles node_modules
+# minifyYamlFiles node_modules

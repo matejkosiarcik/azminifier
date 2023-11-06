@@ -30,3 +30,12 @@ build:
 clean:
 	rm -rf "$(PROJECT_DIR)/node_modules" \
 		"$(PROJECT_DIR)/minifiers/node_modules"
+
+.PHONY: docker-build
+docker-build:
+	time docker build . --tag matejkosiarcik/universal-minifier:dev
+
+.PHONY: docker-multibuild
+docker-multibuild:
+	time docker build . --tag matejkosiarcik/universal-minifier:dev-amd64 --platform linux/amd64
+	time docker build . --tag matejkosiarcik/universal-minifier:dev-arm64 --platform linux/arm64
