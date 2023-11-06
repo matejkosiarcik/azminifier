@@ -1,19 +1,19 @@
-const fs = require('fs');
-const process = require('process');
-const YAML = require('yaml');
+import fs from 'fs';
+import process from 'process';
+import YAML, { ParseOptions as YamlParseOptions, DocumentOptions as YamlDocumentOptions } from 'yaml';
 
-function getYamlVersion(yamlContent) {
+function getYamlVersion(yamlContent: string): '1.1' | '1.2' | undefined {
     const firstLine = yamlContent.split('\n')[0].trim();
     if (/^%YAML 1.1\s*$/.test(firstLine)) {
         return '1.1';
     } else if (/^%YAML 1.2\s*$/.test(firstLine)) {
         return '1.2';
     } else {
-        return null;
+        return;
     }
 }
 
-function stringifyYaml(value, depth, version) {
+function stringifyYaml(value: unknown, depth: number, version: string | undefined): string {
     if (typeof value === 'string') {
         let indentPrefix = '';
         for (let i = 0; i < depth; i++) {
@@ -39,7 +39,7 @@ function stringifyYaml(value, depth, version) {
         return `[${content}]`;
     } else if (typeof value === 'object') {
         let content = Object.keys(value).map((key) => {
-            return `${key}: ${stringifyYaml(value[key], depth + 1, version)}`;
+            return `${key}: ${stringifyYaml(value[key as keyof typeof value], depth + 1, version)}`;
         }).join(depth > 0 ? ',' : '\n');
         if (depth > 0) {
             content = `{${content}}`;
@@ -52,11 +52,11 @@ function stringifyYaml(value, depth, version) {
 
 // main
 (() => {
-    const yamlFile = process.argv.at(-1);
+    const yamlFile = process.argv.at(-1)!;
     let yamlContent = fs.readFileSync(yamlFile, 'utf8');
 
     const version = getYamlVersion(yamlContent);
-    const yamlOptions = {};
+    const yamlOptions: YamlParseOptions & YamlDocumentOptions = {};
     if (version) {
         yamlOptions.version = version;
         yamlContent = yamlContent.replace(/^.+---\n/s, '');

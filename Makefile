@@ -18,12 +18,13 @@ bootstrap:
 		xargs -0 -P0 -n1 npm ci --no-save --no-progress --no-audit --quiet --prefix
 
 .PHONY: test
-test:
+test: build
 	npm test
 
 .PHONY: build
 build:
 	npm run build
+	npm run build --prefix minifiers
 
 .PHONY: clean
 clean:

@@ -12,12 +12,10 @@ export const minifierCommands = {
 };
 
 export async function minifyYaml(file: string): Promise<boolean> {
-    const command = await customExeca(['node', path.join(repoRootPath, 'minifiers', 'yaml.js'), file]);
+    const command = await customExeca(['node', path.join(repoRootPath, 'minifiers', 'js', 'dist', 'yaml.js'), file]);
     if (command.exitCode !== 0) {
         console.error(`There was error minifying ${file}: ${command.all}`);
         return false;
     }
     return true;
-    // console.log('Minified result:', command);
-    // return command;
 }
