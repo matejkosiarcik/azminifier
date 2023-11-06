@@ -32,6 +32,9 @@ async function performTest(input: string, output: string) {
     expect(minifiedContent2, 'File should be minified as expected again').eq(output);
 }
 
+const yaml11VersionPrefix = '%YAML 1.1\n---\n';
+const yaml12VersionPrefix = '%YAML 1.2\n---\n';
+
 context('Minify YAML', function () {
     let tmpDir: string;
     let currDir: string;
@@ -45,6 +48,18 @@ context('Minify YAML', function () {
     this.afterEach(async function () {
         process.chdir(currDir);
         await fs.rm(tmpDir, { force: true, recursive: true });
+    });
+
+    it(`Test minifying empty document`, async () => {
+        await performTest('', '');
+    });
+
+    it(`Test minifying empty document - YAML 1.1`, async () => {
+        await performTest(yaml11VersionPrefix, yaml11VersionPrefix);
+    });
+
+    it(`Test minifying empty document - YAML 1.2`, async () => {
+        await performTest(yaml12VersionPrefix, yaml12VersionPrefix);
     });
 
     const scalarTests = [

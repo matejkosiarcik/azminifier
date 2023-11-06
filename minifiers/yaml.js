@@ -15,11 +15,12 @@ function getYamlVersion(yamlContent) {
 
 function stringifyYaml(value, depth, version) {
     if (typeof value === 'string') {
-        return YAML.stringify(value.trim())
+        const output = YAML.stringify(value.trim())
             .trim()
             .replace(/^\|-?/, '')
             .trim()
             .replaceAll('\n', '\\n');
+        return output;
     } else if (typeof value === 'number') {
         return value.toString();
     } else if (typeof value === 'boolean') {
@@ -31,7 +32,7 @@ function stringifyYaml(value, depth, version) {
     } else if (Array.isArray(value)) {
         const content = value.map((el) => stringifyYaml(el, depth + 1, version)).join(',');
         return `[${content}]`;
-    } else {
+    } else if (typeof value === 'object') {
         let content = Object.keys(value).map((key) => {
             return `${key}: ${stringifyYaml(value[key], depth + 1, version)}`;
         }).join(depth > 0 ? ',' : '\n');
@@ -39,29 +40,29 @@ function stringifyYaml(value, depth, version) {
             content = `{${content}}`;
         }
         return content;
+    } else {
+        throw new Error(`Unknown YAML node ${typeof value}: ${value}`);
     }
 }
 
 // main
 (() => {
     const yamlFile = process.argv.at(-1);
-    const yamlContent = fs.readFileSync(yamlFile, 'utf8');
+    let yamlContent = fs.readFileSync(yamlFile, 'utf8');
 
     const version = getYamlVersion(yamlContent);
     const yamlOptions = {};
     if (version) {
         yamlOptions.version = version;
+        yamlContent = yamlContent.replace(/^.+---\n/s, '');
     }
     const yamlObject = YAML.parse(yamlContent, yamlOptions);
+    const isEmpty = !yamlObject && yamlContent.length === 0;
 
-    let minifiedYamlContent = stringifyYaml(yamlObject, 0, version);
+    let minifiedYamlContent = isEmpty ? '' : stringifyYaml(yamlObject, 0, version);
     if (version) {
         minifiedYamlContent = `%YAML ${version}\n---\n${minifiedYamlContent}`;
     }
 
-    if (minifiedYamlContent.length < yamlContent.length) {
-        fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');
-    } else {
-        console.error(`File at ${yamlFile} couldn't be minified`);
-    }
+    fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');
 })();
