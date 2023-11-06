@@ -132,7 +132,7 @@ context('Minify YAML', function () {
         }
     }
 
-    const booleanTestsForYaml11 = [
+    const booleanTestsForAllBooleans = [
         {
             name: 'positive',
             inputs: ['ON', 'On', 'on', 'YES', 'Yes', 'yes', 'TRUE', 'True', 'true', 'Y', 'y'],
@@ -144,7 +144,7 @@ context('Minify YAML', function () {
             output: 'n',
         },
     ];
-    for (const testType of booleanTestsForYaml11) {
+    for (const testType of booleanTestsForAllBooleans) {
         for (const input of testType.inputs) {
             it(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.1`, async () => {
                 const versionPrefix = '%YAML 1.1\n---\n';
@@ -162,13 +162,13 @@ context('Minify YAML', function () {
 
     const arrayAndObjectTests = [
         {
-            name: 'multiline array',
-            input: '- foo\n- bar  \n- 123',
+            name: 'oneline array',
+            input: ' [ foo, bar, 123 ] ',
             output: '[foo,bar,123]',
         },
         {
-            name: 'oneline array',
-            input: ' [ foo, bar, 123 ] ',
+            name: 'multiline array',
+            input: '- foo\n- bar  \n- 123',
             output: '[foo,bar,123]',
         },
         {
@@ -182,7 +182,7 @@ context('Minify YAML', function () {
             output: 'foo: {key: value,key2: value2}',
         },
         {
-            name: 'object with curly braces',
+            name: 'object with curly braces 2',
             input: 'foo:\n  key: value\nbar:\n  key2: value2\n',
             output: 'foo: {key: value}\nbar: {key2: value2}',
         },
@@ -213,7 +213,12 @@ context('Minify YAML', function () {
             name: '2',
             input: 'key:\n    - "foo bar"\n    - key: val',
             output: 'key: [foo bar,{key: val}]',
-        }
+        },
+        {
+            name: '3',
+            input: 'key:\n    - "foo bar"\nfoo: [ 1, 2 ]\nbar: \n  foo: \n    lol: 123',
+            output: 'key: [foo bar]\nfoo: [1,2]\nbar: {foo: {lol: 123}}',
+        },
     ];
     for (const test of complexTests) {
         it(`Test minifying complex structure ${test.name}`, async () => {
