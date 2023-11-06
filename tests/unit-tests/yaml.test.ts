@@ -4,6 +4,7 @@ import path from 'path';
 import process from 'process';
 import { minifyYaml } from '../../src/minifiers.js';
 import { expect } from 'chai';
+import YAML from 'yaml';
 
 async function performTest(input: string, output: string) {
     await fs.writeFile('file.yml', input, 'utf8');
@@ -13,6 +14,16 @@ async function performTest(input: string, output: string) {
 
     const minifiedContent = await fs.readFile('file.yml', 'utf8');
     expect(minifiedContent, 'File should be minified as expected').eq(output);
+
+    const isValid = (() => {
+        try {
+            YAML.parse(minifiedContent)
+        } catch (error) {
+            return false;
+        }
+        return true;
+    })();
+    expect(isValid, 'Minified YAML should be valid').eq(true);
 
     const returnCode2 = await minifyYaml('file.yml');
     expect(returnCode2, 'File should be minified successfully again with exit status 0').eq(true);
