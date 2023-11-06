@@ -79,22 +79,34 @@ context('Minify YAML', function () {
         });
     }
 
-    const booleanTests = [
+    const booleanTestsForSafeBooleans = [
         {
             name: 'positive',
             inputs: ['TRUE', 'True', 'true'],
-            output: 'true',
+            outputYaml11: 'y',
+            outputYaml12: 'true',
         },
         {
             name: 'negative',
             inputs: ['FALSE', 'False', 'false'],
-            output: 'false',
+            outputYaml11: 'n',
+            outputYaml12: 'false',
         },
     ];
-    for (const testType of booleanTests) {
+    for (const testType of booleanTestsForSafeBooleans) {
         for (const input of testType.inputs) {
             it(`Test minifying booleans - ${testType.name} - "${input}"`, async () => {
-                await performTest(` ${input} `, testType.output);
+                await performTest(` ${input} `, testType.outputYaml12);
+            });
+
+            it(`Test minifying booleans - YAML 1.1 - ${testType.name} - "${input}"`, async () => {
+                const versionPrefix = '%YAML 1.1\n---\n';
+                await performTest(`${versionPrefix} ${input} `, `${versionPrefix}${testType.outputYaml11}`);
+            });
+
+            it(`Test minifying booleans - YAML 1.2 - ${testType.name} - "${input}"`, async () => {
+                const versionPrefix = '%YAML 1.2\n---\n';
+                await performTest(`${versionPrefix} ${input} `, `${versionPrefix}${testType.outputYaml12}`);
             });
         }
     }
