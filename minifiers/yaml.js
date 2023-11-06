@@ -15,12 +15,17 @@ function getYamlVersion(yamlContent) {
 
 function stringifyYaml(value, depth, version) {
     if (typeof value === 'string') {
-        const output = YAML.stringify(value.trim())
-            .trim()
-            .replace(/^\|-?/, '')
-            .trim()
-            .replaceAll('\n', '\\n');
-        return output;
+        let indentPrefix = '';
+        for (let i = 0; i < depth; i++) {
+            indentPrefix += ' ';
+        }
+
+        return YAML.stringify(value)
+            .split('\n')
+            .map((el) => el.trimStart())
+            .map((el, index) => index === 0 ? el : indentPrefix + el)
+            .join('\n')
+            .trimEnd();
     } else if (typeof value === 'number') {
         return value.toString();
     } else if (typeof value === 'boolean') {

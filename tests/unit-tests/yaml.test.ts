@@ -235,24 +235,60 @@ context('Minify YAML', function () {
 
     const multilineStringTests = [
         {
-            name: '1',
+            name: 'basic 1',
             input: 'foo: "foo\n    bar"',
             output: 'foo: foo bar',
         },
         {
-            name: '2',
+            name: 'basic 2',
             input: "foo: 'foo\n    bar'",
             output: 'foo: foo bar',
         },
         {
-            name: '3',
+            name: 'basic 3',
             input: "foo: foo\n    bar",
             output: 'foo: foo bar',
         },
+        {
+            name: 'basic 4',
+            input: "foo:\n  foo\n  bar",
+            output: 'foo: foo bar',
+        },
+        {
+            name: 'basic 5',
+            input: "foo: \n  foo\n  bar",
+            output: 'foo: foo bar',
+        },
         // {
-        //     name: '4',
-        //     input: "foo: | \n  foo \n  bar \n",
-        //     output: 'foo: |\n  foo\n  bar',
+        //     name: 'pipe 1',
+        //     input: "foo: |\n  foo\n  bar\n",
+        //     output: 'foo: |\n foo\n bar\n',
+        // },
+        // {
+        //     name: 'pipe 2',
+        //     input: "foo: |\n  foo\n  bar",
+        //     output: 'foo: |-\n foo\n bar',
+        // },
+        // {
+        //     name: 'pipe 3',
+        //     input: "foo: |-\n  foo\n  bar\n",
+        //     output: 'foo: |-\n foo\n bar',
+        // },
+        // {
+        //     name: 'pipe 4',
+        //     input: "foo: |-\n  foo\n  bar",
+        //     output: 'foo: |-\n foo\n bar',
+        // },
+        // {
+        //     name: 'pipe 5',
+        //     input: `
+        //         foo:
+        //             - |
+        //               first
+
+        //               second
+        //     `,
+        //     output: 'foo:\n - |\n  first\n\n  second',
         // },
     ];
     for (const test of multilineStringTests) {
