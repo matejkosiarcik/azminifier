@@ -120,13 +120,11 @@ context('Minify YAML', function () {
         });
 
         it(`Test minifying scalars - ${test.name} - YAML 1.1`, async () => {
-            const versionPrefix = '%YAML 1.1\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml11VersionPrefix}${test.input} `, `${yaml11VersionPrefix}${test.output}`);
         });
 
         it(`Test minifying scalars - ${test.name} - YAML 1.2`, async () => {
-            const versionPrefix = '%YAML 1.2\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml12VersionPrefix}${test.input} `, `${yaml12VersionPrefix}${test.output}`);
         });
     }
 
@@ -151,13 +149,11 @@ context('Minify YAML', function () {
             });
 
             it(`Test minifying booleans - ${testType.name} - "${input}" - YAML 1.1`, async () => {
-                const versionPrefix = '%YAML 1.1\n---\n';
-                await performTest(`${versionPrefix}${input} `, `${versionPrefix}${testType.outputYaml11}`);
+                await performTest(`${yaml11VersionPrefix}${input} `, `${yaml11VersionPrefix}${testType.outputYaml11}`);
             });
 
             it(`Test minifying booleans - ${testType.name} - "${input}" - YAML 1.2`, async () => {
-                const versionPrefix = '%YAML 1.2\n---\n';
-                await performTest(`${versionPrefix}${input} `, `${versionPrefix}${testType.outputYaml12}`);
+                await performTest(`${yaml12VersionPrefix}${input} `, `${yaml12VersionPrefix}${testType.outputYaml12}`);
             });
         }
     }
@@ -177,14 +173,12 @@ context('Minify YAML', function () {
     for (const testType of booleanTestsForAllBooleans) {
         for (const input of testType.inputs) {
             it(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.1`, async () => {
-                const versionPrefix = '%YAML 1.1\n---\n';
-                await performTest(`${versionPrefix}${input} `, `${versionPrefix}${testType.output}`);
+                await performTest(`${yaml11VersionPrefix}${input} `, `${yaml11VersionPrefix}${testType.output}`);
             });
 
             if (!['false', 'true'].includes(input.toLowerCase())) {
                 it(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.2`, async () => {
-                    const versionPrefix = '%YAML 1.2\n---\n';
-                    await performTest(`${versionPrefix}${input} `, `${versionPrefix}${input}`);
+                    await performTest(`${yaml12VersionPrefix}${input} `, `${yaml12VersionPrefix}${input}`);
                 });
             }
         }
@@ -223,13 +217,11 @@ context('Minify YAML', function () {
         });
 
         it(`Test minifying ${test.name} - YAML 1.1`, async () => {
-            const versionPrefix = '%YAML 1.1\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml11VersionPrefix}${test.input} `, `${yaml11VersionPrefix}${test.output}`);
         });
 
         it(`Test minifying ${test.name} - YAML 1.2`, async () => {
-            const versionPrefix = '%YAML 1.2\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml12VersionPrefix}${test.input} `, `${yaml12VersionPrefix}${test.output}`);
         });
     }
 
@@ -297,13 +289,11 @@ context('Minify YAML', function () {
         });
 
         it(`Test minifying multiline string ${test.name} - YAML 1.1`, async () => {
-            const versionPrefix = '%YAML 1.1\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml11VersionPrefix}${test.input} `, `${yaml11VersionPrefix}${test.output}`);
         });
 
         it(`Test minifying multiline string ${test.name} - YAML 1.2`, async () => {
-            const versionPrefix = '%YAML 1.2\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml12VersionPrefix}${test.input} `, `${yaml12VersionPrefix}${test.output}`);
         });
     }
 
@@ -330,13 +320,11 @@ context('Minify YAML', function () {
         });
 
         it(`Test minifying complex structure ${test.name} - YAML 1.1`, async () => {
-            const versionPrefix = '%YAML 1.1\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml11VersionPrefix}${test.input} `, `${yaml11VersionPrefix}${test.output}`);
         });
 
         it(`Test minifying complex structure ${test.name} - YAML 1.2`, async () => {
-            const versionPrefix = '%YAML 1.2\n---\n';
-            await performTest(`${versionPrefix}${test.input} `, `${versionPrefix}${test.output}`);
+            await performTest(`${yaml12VersionPrefix}${test.input} `, `${yaml12VersionPrefix}${test.output}`);
         });
     }
 });
