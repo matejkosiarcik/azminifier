@@ -2,7 +2,7 @@
 import path from 'path';
 
 import * as url from 'url';
-import { customExeca } from './utils';
+import { customExeca } from './utils.js';
 const __filename = url.fileURLToPath(import.meta.url);
 
 const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
