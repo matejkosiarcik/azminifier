@@ -10,7 +10,7 @@ async function performTest(input: string, output: string) {
     await fs.writeFile('file.yml', input, 'utf8');
 
     const returnCode = await minifyYaml('file.yml');
-    expect(returnCode, 'File should be minified successfully with exit status 0').eq(true);
+    expect(returnCode[0], 'File should be minified successfully with exit status 0').eq(true);
 
     const minifiedContent = await fs.readFile('file.yml', 'utf8');
     expect(minifiedContent, 'File should be minified as expected').eq(output);
@@ -26,7 +26,7 @@ async function performTest(input: string, output: string) {
     expect(isValid, 'Minified YAML should be valid').eq(true);
 
     const returnCode2 = await minifyYaml('file.yml');
-    expect(returnCode2, 'File should be minified successfully again with exit status 0').eq(true);
+    expect(returnCode2[0], 'File should be minified successfully again with exit status 0').eq(true);
 
     const minifiedContent2 = await fs.readFile('file.yml', 'utf8');
     expect(minifiedContent2, 'File should be minified as expected again').eq(output);

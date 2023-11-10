@@ -25,7 +25,7 @@ export async function findFiles(fspath: string): Promise<string[]> {
     return outputFiles;
 }
 
-export function listFiles(list: string[], extension: string | string[]): string[] {
+export function filterFiles(list: string[], extension: string | string[]): string[] {
     const extensions = typeof extension === 'string' ? [extension] : extension;
     return list.filter((file) => extensions.some((ext) => file.endsWith(`.${ext}`)));
 }
@@ -47,4 +47,17 @@ export async function customExeca(command: string[], options?: ExecaOptions<stri
     } catch (error) {
         return error as ExecaError;
     }
+}
+
+export function formatBytes(bytes: number): string {
+    const metricPrefices = '_KMGTPEZYRQ';
+    let i = 0;
+    while (i >= 1024 && i < metricPrefices.length) {
+        i += 1;
+        bytes = bytes / 1024;
+    }
+
+    const prefix = i === 0 ? '' : metricPrefices[i];
+    const roundBytes = bytes.toFixed(2).replace(/\.0+$/, '');
+    return `${roundBytes} ${prefix}B`;
 }
