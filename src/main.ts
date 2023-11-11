@@ -1,5 +1,5 @@
-import { minifyFile } from './minifiers.js';
-import { findFiles } from './utils.js';
+import { minifyFile } from './minifiers.ts';
+import { findFiles } from './utils.ts';
 
 export async function main(options: {
     paths: string[],

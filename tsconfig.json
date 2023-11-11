@@ -5,12 +5,14 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
+    "noEmit": true,
     "lib": [
       "ESNext"
     ],
     "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": false,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "allowImportingTsExtensions": true
   },
   "include": [
     "src"

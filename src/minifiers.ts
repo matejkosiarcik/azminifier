@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import * as url from 'url';
-import { customExeca, formatBytes } from './utils.js';
+import { customExeca, formatBytes } from './utils.ts';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
@@ -12,7 +12,7 @@ const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
 async function minifyPlainText(file: string): Promise<boolean> {
     try {
         const content = (await fs.readFile(file, 'utf8'))
-            .split('\n').map((line) => line.replaceAll(/\s+$/, '')).join('\n')
+            .split('\n').map((line) => line.replaceAll(/\s+$/g, '')).join('\n')
             .replaceAll('\n\n\n', '\n\n')
             .replace(/\n\n/s, '\n');
         await fs.writeFile(file, content, 'utf8');

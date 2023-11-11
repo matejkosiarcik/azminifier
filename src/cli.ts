@@ -1,6 +1,6 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { main } from './main.js';
+import { main } from './main.ts';
 
 (async () => {
     const version = '0.0.0';
