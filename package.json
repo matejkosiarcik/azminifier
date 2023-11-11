@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "rollup --config rollup.config.js",
     "test": "mocha --exit",
     "run": "node --no-warnings --loader ts-node/esm src/cli.ts"
   },
@@ -11,6 +11,7 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.5",
     "@tsconfig/strictest": "^2.0.2",
     "@types/chai": "^4.3.9",
     "@types/mocha": "^10.0.3",
@@ -21,6 +22,7 @@
     "modclean": "^3.0.0-beta.1",
     "node-prune": "^1.0.2",
     "npm-run-all": "^4.1.5",
+    "rollup": "^4.3.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "yaml": "^2.3.4"
