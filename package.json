@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rollup --config rollup.config.js",
+    "build": "rollup --silent --config rollup.config.js",
     "test": "mocha --exit",
     "run": "node --no-warnings --loader ts-node/esm src/cli.ts"
   },
