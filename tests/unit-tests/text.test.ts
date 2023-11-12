@@ -47,12 +47,12 @@ context('Minify Plain Text', function () {
             output: 'foo\n',
         },
         {
-            name: 'two trailing newline',
+            name: 'two trailing newlines',
             input: 'foo\n\n',
             output: 'foo\n',
         },
         {
-            name: 'three trailing newline',
+            name: 'three trailing newlines',
             input: 'foo\n\n\n',
             output: 'foo\n',
         },
@@ -79,9 +79,32 @@ context('Minify Plain Text', function () {
             input: 'foo\t\nbar\n',
             output: 'foo\nbar\n',
         },
+        {
+            name: 'complex trailing whitespace',
+            input: 'foo\t  \t  \nbar\n',
+            output: 'foo\nbar\n',
+        },
     ];
     for (const variant of trailingWhitespaceTests) {
         it(`Test minifying trailing whitespace - ${variant.name}`, async () => {
+            await performTest(variant.input, variant.output);
+        });
+    }
+
+    const otherTests = [
+        {
+            name: 'multiple newlines in content',
+            input: 'foo\n\n\nbar\n\n\nbar\n',
+            output: 'foo\n\nbar\n\nbar\n',
+        },
+        {
+            name: 'complex content',
+            input: 'foo \t \t\n\n\nbar\n\n\nbar\n\n',
+            output: 'foo\n\nbar\n\nbar\n',
+        },
+    ];
+    for (const variant of otherTests) {
+        it(`Test minifying - ${variant.name}`, async () => {
             await performTest(variant.input, variant.output);
         });
     }

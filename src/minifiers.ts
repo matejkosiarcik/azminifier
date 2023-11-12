@@ -14,7 +14,7 @@ async function minifyPlainText(file: string): Promise<boolean> {
         const content = (await fs.readFile(file, 'utf8'))
             .split('\n').map((line) => line.replaceAll(/\s+$/g, '')).join('\n')
             .replaceAll('\n\n\n', '\n\n')
-            .replace(/\n\n/s, '\n');
+            .replace(/\n\n$/s, '\n');
         await fs.writeFile(file, content, 'utf8');
         return true;
     } catch (error) {
