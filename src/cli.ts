@@ -1,6 +1,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { main } from './main.ts';
+import { log } from './log.ts';
 
 (async () => {
     const version = '0.0.0';
@@ -46,9 +47,14 @@ import { main } from './main.ts';
         process.exit(1);
     }
 
-    await main({
-        paths: args['path'] as string[],
-        log: args.quiet ? 'quiet' : args.verbose ? 'verbose' : 'default',
-        jobs: args.jobs,
-    });
+    try {
+        await main({
+            paths: args['path'] as string[],
+            log: args.quiet ? 'quiet' : args.verbose ? 'verbose' : 'default',
+            jobs: args.jobs,
+        });
+    } catch (error) {
+        log.error(error);
+        process.exit(1);
+    }
 })();

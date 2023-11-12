@@ -1,8 +1,13 @@
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import { execa, ExecaError, Options as ExecaOptions, ExecaReturnValue } from "@esm2cjs/execa";
 
 export async function findFiles(fspath: string): Promise<string[]> {
+    if (!fsSync.existsSync(fspath)) {
+        throw new Error(`Directory "${fspath}" doesn't exist`);
+    }
+
     const stats = await fs.stat(fspath);
     if (stats.isSymbolicLink()) {
         const realpath = await fs.readlink(fspath);
