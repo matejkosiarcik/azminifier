@@ -2,8 +2,7 @@ import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import process from 'process';
-import { performSimpleTest } from '../utils.ts';
-// import { describe, expect, test } from '@jest/globals';
+import { performSimpleTest } from '../utils/utils.ts';
 
 async function performTest(input: string, output: string) {
     await performSimpleTest({

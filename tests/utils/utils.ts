@@ -1,8 +1,7 @@
 import fs from 'fs/promises';
 import YAML from 'yaml';
 import { expect } from 'chai';
-// import { expect } from '@jest/globals';
-import { minifyFile } from '../src/minifiers.ts';
+import { minifyFile } from '../../src/minifiers.ts';
 
 export async function performSimpleTest(options: {
     input: string,
