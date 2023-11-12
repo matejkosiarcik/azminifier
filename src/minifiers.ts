@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 // import * as url from 'url';
 import { formatBytes } from './utils.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
+import { log } from './log.ts';
 
 // const __filename = url.fileURLToPath(import.meta.url);
 // const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
@@ -74,13 +75,13 @@ export async function minifyFile(file: string): Promise<boolean> {
     })();
 
     if (filetype === '') {
-        console.log(`Skipping file ${file} - Unsupported file type`);
+        log.debug(`Skipping file ${file} - Unsupported file type`);
         return true;
     }
 
     const originalSize = (await fs.stat(file)).size;
     const originalContent = await fs.readFile(file);
-    console.log(`Minifying ${filetype} file: ${file}`);
+    log.info(`Minifying ${filetype} file: ${file}`);
 
     const minifyStatus = await (async () => {
         switch (filetype) {
@@ -101,21 +102,21 @@ export async function minifyFile(file: string): Promise<boolean> {
 
     if (!minifyStatus[0]) {
         await fs.writeFile(file, originalContent);
-        console.log(`There was error minifying ${file}: ${minifyStatus[1]}`);
+        log.error(`There was error minifying ${file}: ${minifyStatus[1]}`);
         return false;
     }
 
     const afterSize = (await fs.stat(file)).size;
     if (afterSize == originalSize) {
         await fs.writeFile(file, originalContent);
-        console.log(`File ${file} was not minified, size unchanged`);
+        log.debug(`File ${file} was not minified, size unchanged`);
         return true;
     } else if (afterSize > originalSize) {
         await fs.writeFile(file, originalContent);
-        console.log(`File ${file} was not minified, size increased by +${((afterSize / originalSize) * 100 - 100).toFixed(2)}% / +${formatBytes(afterSize - originalSize)}`);
+        log.debug(`File ${file} was not minified, size increased by +${((afterSize / originalSize) * 100 - 100).toFixed(2)}% / +${formatBytes(afterSize - originalSize)}`);
         return true;
     }
 
-    console.log(`Minified file ${file}, size decreased by -${((afterSize / originalSize) * 100).toFixed(2)}% / -${formatBytes(originalSize - afterSize)}`);
+    log.debug(`Minified file ${file}, size decreased by -${((afterSize / originalSize) * 100).toFixed(2)}% / -${formatBytes(originalSize - afterSize)}`);
     return true;
 }
