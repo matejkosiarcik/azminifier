@@ -94,7 +94,7 @@ context('Minify Plain Text', function () {
     const otherTests = [
         {
             name: 'multiple newlines in content',
-            input: 'foo\n\n\nbar\n\n\nbar\n',
+            input: 'foo\n\n\n\n\nbar\n\n\nbar\n',
             output: 'foo\n\nbar\n\nbar\n',
         },
         {
