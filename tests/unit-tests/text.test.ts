@@ -1,8 +1,4 @@
-import fs from 'fs/promises';
-import os from 'os';
-import path from 'path';
-import process from 'process';
-import { performSimpleTest } from '../utils/utils.ts';
+import { performSimpleTest, setupTest, teardownTest } from '../utils/utils.ts';
 
 async function performTest(input: string, output: string) {
     await performSimpleTest({
@@ -17,14 +13,11 @@ context('Minify Plain Text', function () {
     let currDir: string;
 
     this.beforeEach(async function () {
-        currDir = process.cwd();
-        tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'universal-minifier-tests-'));
-        process.chdir(tmpDir);
+        [currDir, tmpDir] = await setupTest();
     });
 
     this.afterEach(async function () {
-        process.chdir(currDir);
-        await fs.rm(tmpDir, { force: true, recursive: true });
+        await teardownTest(currDir, tmpDir);
     });
 
     it(`Test minifying empty document`, async () => {

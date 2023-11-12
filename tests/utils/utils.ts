@@ -1,7 +1,23 @@
 import fs from 'fs/promises';
+import os from 'os';
+import path from 'path';
 import YAML from 'yaml';
 import { expect } from 'chai';
 import { minifyFile } from '../../src/minifiers.ts';
+import { setLogLevel } from '../../src/log.ts';
+
+export async function setupTest(): Promise<[string, string]> {
+    const currDir = process.cwd();
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'universal-minifier-tests-'));
+    process.chdir(tmpDir);
+    setLogLevel('none');
+    return [currDir, tmpDir];
+}
+
+export async function teardownTest(currDir: string, tmpDir: string) {
+    process.chdir(currDir);
+    await fs.rm(tmpDir, { force: true, recursive: true });
+}
 
 export async function performSimpleTest(options: {
     input: string,
