@@ -1,38 +1,53 @@
 import path from 'path';
 import fs from 'fs/promises';
-import * as url from 'url';
-import { customExeca, formatBytes } from './utils.ts';
+// import * as url from 'url';
+import { formatBytes } from './utils.ts';
+import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 
-const __filename = url.fileURLToPath(import.meta.url);
-const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
+// const __filename = url.fileURLToPath(import.meta.url);
+// const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
 
 /**
  * Remove trailing whitespace and multiple joined newlines
  */
-async function minifyPlainText(file: string): Promise<boolean> {
+async function minifyPlainText(file: string): Promise<[boolean, string]> {
     try {
         const content = (await fs.readFile(file, 'utf8'))
             .split('\n').map((line) => line.replaceAll(/\s+$/g, '')).join('\n')
             .replaceAll(/\n\n\n+/gs, '\n\n')
             .replace(/\n\n$/s, '\n');
         await fs.writeFile(file, content, 'utf8');
-        return true;
+        return [true, ''];
     } catch (error) {
-        console.error(`There was error minifying ${file}: ${error}`);
-        return false;
+        return [false, `${error}`];
     }
 }
 
 // MARK: - Config files
 
-export async function minifyYaml(file: string): Promise<[boolean, string]> {
-    const command = await customExeca(['node', path.join(repoRootPath, 'minifiers', 'js', 'dist', 'yaml.js'), file]);
-    if (command.exitCode !== 0) {
-        console.error(`There was error minifying ${file}: ${command.all}`);
-        return [false, command.all ?? '<empty>'];
+async function minifyYaml(file: string): Promise<[boolean, string]> {
+    try {
+        await minifyYamlCustom(file);
+        return [true, ''];
+    } catch (error) {
+        return [false, `${error}`];
     }
-    return [true, command.all ?? '<empty>'];
 }
+
+// async function minifyJavaScript(file: string): Promise<[boolean, string]> {
+//     // TODO: Finish with terser
+//     return [false, ''];
+//     // const command = await customExeca(['terser', file], {
+//     //     env: {
+//     //         PATH: `${process.env['PATH']}:${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}`
+//     //     }
+//     // });
+//     // if (command.exitCode !== 0) {
+//     //     console.error(`There was error minifying ${file}: ${command.all}`);
+//     //     return [false, command.all ?? '<empty>'];
+//     // }
+//     // return [true, command.all ?? '<empty>'];
+// }
 
 export async function minifyFile(file: string): Promise<boolean> {
     const extension = path.extname(file).slice(1);
@@ -79,13 +94,14 @@ export async function minifyFile(file: string): Promise<boolean> {
                 return minifyPlainText(file);
             }
             default: {
-                return true;
+                return [true, ''] as const;
             }
         }
     })();
 
-    if (!minifyStatus) {
+    if (!minifyStatus[0]) {
         await fs.writeFile(file, originalContent);
+        console.log(`There was error minifying ${file}: ${minifyStatus[1]}`);
         return false;
     }
 

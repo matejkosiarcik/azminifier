@@ -1,8 +1,8 @@
-import fs from 'fs';
-import process from 'process';
+import fs from 'fs/promises';
+// import process from 'process';
 import YAML, { ParseOptions as YamlParseOptions, DocumentOptions as YamlDocumentOptions } from 'yaml';
 
-function getYamlVersion(yamlContent: string): '1.1' | '1.2' | undefined {
+function getYamlPreambleVersion(yamlContent: string): '1.1' | '1.2' | undefined {
     const firstLine = yamlContent.split('\n')[0].trim();
     if (/^%YAML 1.1\s*$/.test(firstLine)) {
         return '1.1';
@@ -50,12 +50,10 @@ function stringifyYaml(value: unknown, depth: number, version: string | undefine
     }
 }
 
-// main
-(() => {
-    const yamlFile = process.argv.at(-1)!;
-    let yamlContent = fs.readFileSync(yamlFile, 'utf8');
+export async function minifyYamlCustom(yamlFile: string) {
+    let yamlContent = await fs.readFile(yamlFile, 'utf8');
 
-    const version = getYamlVersion(yamlContent);
+    const version = getYamlPreambleVersion(yamlContent);
     const yamlOptions: YamlParseOptions & YamlDocumentOptions = {};
     if (version) {
         yamlOptions.version = version;
@@ -69,5 +67,5 @@ function stringifyYaml(value: unknown, depth: number, version: string | undefine
         minifiedYamlContent = `%YAML ${version}\n---\n${minifiedYamlContent}`;
     }
 
-    fs.writeFileSync(yamlFile, minifiedYamlContent, 'utf8');
-})();
+    await fs.writeFile(yamlFile, minifiedYamlContent, 'utf8');
+}
