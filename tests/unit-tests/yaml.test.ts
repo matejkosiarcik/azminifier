@@ -2,34 +2,14 @@ import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import process from 'process';
-import { minifyYaml } from '../../src/minifiers.js';
-import { expect } from 'chai';
-import YAML from 'yaml';
+import { performSimpleTest } from '../utils.ts';
 
 async function performTest(input: string, output: string) {
-    await fs.writeFile('file.yml', input, 'utf8');
-
-    const returnCode = await minifyYaml('file.yml');
-    expect(returnCode[0], 'File should be minified successfully with exit status 0').eq(true);
-
-    const minifiedContent = await fs.readFile('file.yml', 'utf8');
-    expect(minifiedContent, 'File should be minified as expected').eq(output);
-
-    const isValid = (() => {
-        try {
-            YAML.parse(minifiedContent)
-        } catch (error) {
-            return false;
-        }
-        return true;
-    })();
-    expect(isValid, 'Minified YAML should be valid').eq(true);
-
-    const returnCode2 = await minifyYaml('file.yml');
-    expect(returnCode2[0], 'File should be minified successfully again with exit status 0').eq(true);
-
-    const minifiedContent2 = await fs.readFile('file.yml', 'utf8');
-    expect(minifiedContent2, 'File should be minified as expected again').eq(output);
+    await performSimpleTest({
+        input: input,
+        output: output,
+        extension: 'yml',
+    });
 }
 
 const yaml11VersionPrefix = '%YAML 1.1\n---\n';
