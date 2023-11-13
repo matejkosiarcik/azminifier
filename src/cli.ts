@@ -20,9 +20,6 @@ import { log } from './log.ts';
         .option('help', {
             alias: 'h', describe: 'Show usage', type: 'boolean',
         })
-        .option('version', {
-            alias: 'V', describe: 'Show version', type: 'boolean',
-        })
         .option('verbose', {
             alias: 'v', describe: 'More logging', type: 'boolean',
         })

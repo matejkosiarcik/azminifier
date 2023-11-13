@@ -18,7 +18,7 @@ export async function main(options: {
     setLogLevel(logLevel);
 
     const files = (await Promise.all(options.paths.map(async (el) => findFiles(el)))).flat();
-    log.debug('Files:', files);
+    log.debug('Found files:', files);
 
     for (const file of files) {
         await minifyFile(file);
