@@ -16,7 +16,8 @@ RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
-RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
+RUN --mount=type=cache,target=/root/.npm \
+    NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
     npx modclean --patterns default:safe --run --error-halt
 # Can't run `node-prune`, because it removes files which are used at runtime
 COPY tsconfig.json ./
@@ -47,7 +48,8 @@ RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY minifiers/package.json minifiers/package-lock.json ./
-RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
+RUN --mount=type=cache,target=/root/.npm \
+    NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
     npx modclean --patterns default:safe --run --error-halt && \
     npm prune --production
     # Can't run `node-prune`, because it removes files which are used at runtime
