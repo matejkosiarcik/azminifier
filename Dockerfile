@@ -15,12 +15,9 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY minifiers/package.json minifiers/package-lock.json ./
 RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
-    npx modclean --patterns default:safe --run --error-halt
-    # Can't run `node-prune`, because it removes files which are used at runtime
-COPY minifiers/tsconfig.json ./
-COPY minifiers/js/src/ ./js/src/
-RUN npm run build && \
+    npx modclean --patterns default:safe --run --error-halt && \
     npm prune --production
+    # Can't run `node-prune`, because it removes files which are used at runtime
 COPY docker-utils/prune-dependencies/prune-nodejs.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-nodejs.sh
 
@@ -32,8 +29,6 @@ RUN apt-get update -qq && \
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh ./check-minifiers-nodejs.sh
 COPY --from=minifiers-nodejs-build /app/node_modules ./node_modules/
 COPY --from=minifiers-nodejs-build /app/package.json ./package.json
-COPY --from=minifiers-nodejs-build /app/js/dist ./js/dist/
-ENV YAML_MINIFIER=/app/js/dist/yaml.js
 RUN sh check-minifiers-nodejs.sh
 
 ### Helpers ###
@@ -49,6 +44,7 @@ RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress
     npx modclean --patterns default:safe --run --error-halt && \
     npx node-prune
 COPY tsconfig.json ./
+COPY rollup.config.js ./
 COPY src/ ./src/
 RUN npm run build && \
     npm prune --production
@@ -57,7 +53,6 @@ RUN sh /utils/prune-nodejs.sh
 
 FROM debian:12.2-slim AS cli-final
 WORKDIR /app
-COPY --from=cli-build /app/dist ./dist
 COPY --from=cli-build /app/node_modules ./node_modules
 COPY --from=cli-build /app/package.json ./package.json
 
@@ -68,8 +63,8 @@ RUN apt-get update -qq && \
         nodejs npm \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >usr/bin/uniminify && \
-    chmod a+x usr/bin/uniminify
+    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
+    chmod a+x /usr/bin/uniminify
 COPY docker-utils/sanity-checks/check-system.sh ./
 RUN sh check-system.sh
 WORKDIR /app
