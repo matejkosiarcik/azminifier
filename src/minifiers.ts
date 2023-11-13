@@ -1,12 +1,12 @@
 import path from 'path';
 import fs from 'fs/promises';
-// import * as url from 'url';
-import { formatBytes } from './utils.ts';
+import * as url from 'url';
+import { customExeca, formatBytes } from './utils.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { log } from './log.ts';
 
-// const __filename = url.fileURLToPath(import.meta.url);
-// const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
+const __filename = url.fileURLToPath(import.meta.url);
+const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
 
 /**
  * Remove trailing whitespace and multiple joined newlines
@@ -35,20 +35,17 @@ async function minifyYaml(file: string): Promise<[boolean, string]> {
     }
 }
 
-// async function minifyJavaScript(file: string): Promise<[boolean, string]> {
-//     // TODO: Finish with terser
-//     return [false, ''];
-//     // const command = await customExeca(['terser', file], {
-//     //     env: {
-//     //         PATH: `${process.env['PATH']}:${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}`
-//     //     }
-//     // });
-//     // if (command.exitCode !== 0) {
-//     //     console.error(`There was error minifying ${file}: ${command.all}`);
-//     //     return [false, command.all ?? '<empty>'];
-//     // }
-//     // return [true, command.all ?? '<empty>'];
-// }
+async function minifyJavaScript(file: string): Promise<[boolean, string]> {
+    const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
+        env: {
+            PATH: `${process.env['PATH']}:${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}`
+        }
+    });
+    if (command.exitCode !== 0) {
+        return [false, command.all ?? '<empty>'];
+    }
+    return [true, command.all ?? '<empty>'];
+}
 
 export async function minifyFile(file: string): Promise<boolean> {
     const extension = path.extname(file).slice(1);
@@ -65,6 +62,11 @@ export async function minifyFile(file: string): Promise<boolean> {
             case 'md':
             case 'markdown': {
                 return 'MARKDOWN' as const;
+            }
+            case 'js':
+            case 'mjs':
+            case 'cjs': {
+                return 'JAVASCRIPT' as const;
             }
             default: {
                 // TODO: Check if file is text file (by eg `file`)
@@ -94,6 +96,9 @@ export async function minifyFile(file: string): Promise<boolean> {
             case 'MARKDOWN': {
                 return minifyPlainText(file);
             }
+            case 'JAVASCRIPT': {
+                return minifyJavaScript(file);
+            }
             default: {
                 return [true, ''] as const;
             }
@@ -102,8 +107,9 @@ export async function minifyFile(file: string): Promise<boolean> {
 
     if (!minifyStatus[0]) {
         await fs.writeFile(file, originalContent);
-        log.error(`There was error minifying ${file}: ${minifyStatus[1]}`);
-        return false;
+        // log.error(`There was error minifying ${file}: ${minifyStatus[1]}`);
+        throw new Error(`There was error minifying ${file}: ${minifyStatus[1]}`);
+        // return false;
     }
 
     const afterSize = (await fs.stat(file)).size;
