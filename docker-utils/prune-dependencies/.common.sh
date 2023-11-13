@@ -181,26 +181,34 @@ removeEmptyDirectories() {
     done
 }
 
+removeHiddenFiles() {
+    find "$1" -type f -name '.*' -delete
+}
+
+removeHiddenDirectories() {
+    find "$1" -type d -name '.*' -not -name '.bin' -prune -exec rm -rf {} \;
+}
+
 ### Minification ###
 
-minifyJsonFile() {
-    jq -c '.' <"$1" | sponge "$1"
-}
+# minifyJsonFile() {
+#     jq -c '.' <"$1" | sponge "$1"
+# }
 
-# Minify JSONs
-minifyJsonFiles() {
-    find "$1" -type f -iname '*.json' | while read -r file; do
-        minifyJsonFile "$file"
-    done
-}
+# # Minify JSONs
+# minifyJsonFiles() {
+#     find "$1" -type f -iname '*.json' | while read -r file; do
+#         minifyJsonFile "$file"
+#     done
+# }
 
-minifyYamlFile() {
-    node /optimizations/yaml-minifier/minify-yaml.js "$1"
-}
+# minifyYamlFile() {
+#     node /optimizations/yaml-minifier/minify-yaml.js "$1"
+# }
 
-# Minify JSONs
-minifyYamlFiles() {
-    find "$1" -type f \( -iname '*.yaml' -or -iname '*.yml' \) | while read -r file; do
-        minifyYamlFile "$file"
-    done
-}
+# # Minify JSONs
+# minifyYamlFiles() {
+#     find "$1" -type f \( -iname '*.yaml' -or -iname '*.yml' \) | while read -r file; do
+#         minifyYamlFile "$file"
+#     done
+# }

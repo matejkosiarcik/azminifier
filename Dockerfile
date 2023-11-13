@@ -7,6 +7,39 @@
 # hadolint global ignore=DL3042
 # ^^^ Allow pip's cache, because we use it for cache mount
 
+### CLI ###
+
+# Main CLI #
+FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS cli-build
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
+RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
+    npx modclean --patterns default:safe --run --error-halt
+# Can't run `node-prune`, because it removes files which are used at runtime
+COPY tsconfig.json ./
+COPY rollup.config.js ./
+COPY src/ ./src/
+RUN npm run build && \
+    npm prune --production
+COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
+RUN sh /utils/prune-npm.sh
+
+FROM debian:12.2-slim AS cli-final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=cli-build /app/node_modules ./node_modules
+COPY --from=cli-build /app/package.json ./package.json
+COPY --from=cli-build /app/dist/ ./dist/
+COPY docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
+RUN sh /utils/check-minifiers-custom.sh
+
+### 3rd party minifiers ###
+
 # NodeJS/NPM #
 FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS minifiers-nodejs-build
 WORKDIR /app
@@ -18,45 +51,21 @@ RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress
     npx modclean --patterns default:safe --run --error-halt && \
     npm prune --production
     # Can't run `node-prune`, because it removes files which are used at runtime
-COPY docker-utils/prune-dependencies/prune-nodejs.sh docker-utils/prune-dependencies/.common.sh /utils/
-RUN sh /utils/prune-nodejs.sh
+COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
+RUN sh /utils/prune-npm.sh
 
 FROM debian:12.2-slim AS minifiers-nodejs-final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh ./check-minifiers-nodejs.sh
 COPY --from=minifiers-nodejs-build /app/node_modules ./node_modules/
 COPY --from=minifiers-nodejs-build /app/package.json ./package.json
-RUN sh check-minifiers-nodejs.sh
-
-### Helpers ###
-
-# Main CLI #
-FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS cli-build
-WORKDIR /app
-RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
-    rm -rf /var/lib/apt/lists/*
-COPY package.json package-lock.json ./
-RUN NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
-    npx modclean --patterns default:safe --run --error-halt && \
-    npx node-prune
-COPY tsconfig.json ./
-COPY rollup.config.js ./
-COPY src/ ./src/
-RUN npm run build && \
-    npm prune --production
-COPY docker-utils/prune-dependencies/prune-nodejs.sh docker-utils/prune-dependencies/.common.sh /utils/
-RUN sh /utils/prune-nodejs.sh
-
-FROM debian:12.2-slim AS cli-final
-WORKDIR /app
-COPY --from=cli-build /app/node_modules ./node_modules
-COPY --from=cli-build /app/package.json ./package.json
+COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/check-minifiers-nodejs.sh
+RUN sh /utils/check-minifiers-nodejs.sh
 
 # Pre-Final #
+
 FROM debian:12.2-slim AS pre-final
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
