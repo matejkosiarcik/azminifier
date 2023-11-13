@@ -18,13 +18,13 @@ RUN apt-get update -qq && \
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
-    npx modclean --patterns default:safe --run --error-halt
+    chronic npx modclean --patterns default:safe --run --error-halt --no-progress
 # Can't run `node-prune`, because it removes files which are used at runtime
 COPY tsconfig.json ./
 COPY rollup.config.js ./
 COPY src/ ./src/
-RUN npm run build && \
-    npm prune --production
+RUN npm run --silent build && \
+    npm prune --production --silent --no-progress --no-audit
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
 
@@ -50,8 +50,8 @@ RUN apt-get update -qq && \
 COPY minifiers/package.json minifiers/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
-    npx modclean --patterns default:safe --run --error-halt && \
-    npm prune --production
+    chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
+    npm prune --production --silent --no-progress --no-audit
     # Can't run `node-prune`, because it removes files which are used at runtime
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
