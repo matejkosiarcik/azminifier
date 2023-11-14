@@ -13,7 +13,7 @@
 
 ## About
 
-This project is in early stage of development
+This project is in early stage of development.
 
 ## License
 
