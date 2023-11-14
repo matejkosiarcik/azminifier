@@ -12,3 +12,6 @@ runYaml() {
 
 runYaml '"foo"'
 runYaml 'foo:\n  - bar\n'
+
+node "/app/dist/cli.js" --version >/dev/null 2>&1
+node "/app/dist/cli.js" --help >/dev/null 2>&1
