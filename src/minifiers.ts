@@ -53,20 +53,20 @@ export async function minifyFile(file: string): Promise<boolean> {
         switch (extension) {
             case 'yaml':
             case 'yml': {
-                return 'YAML' as const;
+                return 'Yaml' as const;
             }
             case 'txt':
             case 'text': {
-                return 'TEXT' as const;
+                return 'Text' as const;
             }
             case 'md':
             case 'markdown': {
-                return 'MARKDOWN' as const;
+                return 'Markdown' as const;
             }
             case 'js':
             case 'mjs':
             case 'cjs': {
-                return 'JAVASCRIPT' as const;
+                return 'JavaScript' as const;
             }
             default: {
                 // TODO: Check if file is text file (by eg `file`)
@@ -87,16 +87,16 @@ export async function minifyFile(file: string): Promise<boolean> {
 
     const minifyStatus = await (async () => {
         switch (filetype) {
-            case 'YAML': {
+            case 'Yaml': {
                 return minifyYaml(file);
             }
-            case 'TEXT': {
+            case 'Text': {
                 return minifyPlainText(file);
             }
-            case 'MARKDOWN': {
+            case 'Markdown': {
                 return minifyPlainText(file);
             }
-            case 'JAVASCRIPT': {
+            case 'JavaScript': {
                 return minifyJavaScript(file);
             }
             default: {
