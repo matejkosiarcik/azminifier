@@ -19,7 +19,6 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress
-# Can't run `node-prune`, because it removes files which are used at runtime
 COPY tsconfig.json ./
 COPY rollup.config.js ./
 COPY src/ ./src/
@@ -42,7 +41,8 @@ RUN sh /utils/check-minifiers-custom.sh
 ### 3rd party minifiers ###
 
 # NodeJS/NPM #
-FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS minifiers-nodejs-build
+
+FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS minifiers-nodejs-build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
@@ -52,19 +52,37 @@ RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
-    # Can't run `node-prune`, because it removes files which are used at runtime
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
+
+FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-nodejs-build2
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm inotify-tools psmisc >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minifiers-nodejs-build1 /app/node_modules/ ./node_modules/
+COPY --from=minifiers-nodejs-build1 /app/package.json ./package.json
+COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/check-minifiers-nodejs.sh
+RUN export PATH="/app/node_modules/.bin:$PATH" && \
+    touch /usage-list.txt && \
+    inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
+    sh /utils/check-minifiers-nodejs.sh && \
+    killall inotifywait
+COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
+RUN sh /utils/prune-inotifylist.sh node_modules /usage-list.txt
 
 FROM debian:12.2-slim AS minifiers-nodejs-final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-nodejs-build /app/node_modules ./node_modules/
-COPY --from=minifiers-nodejs-build /app/package.json ./package.json
+COPY --from=minifiers-nodejs-build2 /app/node_modules ./node_modules/
+COPY --from=minifiers-nodejs-build2 /app/package.json ./package.json
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/check-minifiers-nodejs.sh
-RUN sh /utils/check-minifiers-nodejs.sh
+RUN export PATH="/app/node_modules/.bin:$PATH" && \
+    sh /utils/check-minifiers-nodejs.sh
+
+# TODO: More minifier environments #
 
 # Pre-Final #
 

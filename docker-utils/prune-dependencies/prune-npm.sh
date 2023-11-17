@@ -19,7 +19,7 @@ removeHiddenFiles node_modules
 # Unused yargs locales
 find node_modules -ipath '*/locale*/*' -name '*.json' -not -name 'en*.json' -delete
 
-find node_modules -type f -not \( \
+find node_modules -type f -name '*.*' -and -not \( \
         -name '*.js' -or \
         -name '*.cjs' -or \
         -name '*.mjs' -or \
