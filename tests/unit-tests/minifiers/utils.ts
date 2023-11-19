@@ -3,8 +3,8 @@ import os from 'os';
 import path from 'path';
 import YAML from 'yaml';
 import { expect } from 'chai';
-import { minifyFile } from '../../src/minifiers.ts';
-import { setLogLevel } from '../../src/log.ts';
+import { minifyFile } from '../../../src/minifiers.ts';
+import { setLogLevel } from '../../../src/log.ts';
 
 export async function setupTest(): Promise<[string, string]> {
     const currDir = process.cwd();
