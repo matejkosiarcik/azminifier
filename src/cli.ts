@@ -29,8 +29,8 @@ import { log } from './log.ts';
         .option('dry-run', {
             alias: 'n', describe: 'Dry run - just analyze, does not modify files', type: 'boolean',
         })
-        .option('jobs', {
-            alias: 'j', describe: 'Count of cocurrent jobs to use (when set to "0" will use cpu-threads)', type: 'number', default: 0,
+        .option('exclude', {
+            describe: 'Exclude specified files (space separated list - can be a wildcard)', type: 'array',
         });
 
     if (process.env['NOWRAP'] === '1') {
@@ -44,11 +44,13 @@ import { log } from './log.ts';
         process.exit(1);
     }
 
+    const excludePatterns = args.exclude?.map((el) => `${el}`) ?? [];
+
     try {
         await main({
             paths: args['path'] as string[],
             log: args.quiet ? 'quiet' : args.verbose ? 'verbose' : 'default',
-            jobs: args.jobs,
+            exclude: excludePatterns,
         });
     } catch (error) {
         log.error(error);

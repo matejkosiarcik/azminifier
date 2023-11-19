@@ -4,8 +4,8 @@ import { findFiles } from './utils.ts';
 
 export async function main(options: {
     paths: string[],
-    jobs: number,
     log: 'verbose' | 'default' | 'quiet',
+    exclude: string[],
 }) {
     const logLevel = (() => {
         const logLevels = {

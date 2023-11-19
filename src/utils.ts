@@ -66,3 +66,27 @@ export function formatBytes(bytes: number): string {
     const roundBytes = bytes.toFixed(2).replace(/\.0+$/, '');
     return `${roundBytes} ${prefix}B`;
 }
+
+/**
+ * Transform wildcard to regex
+ * This might not be foolproof, but should be ok for our use-case
+ * Handles even relatively complex things like '*.{c,h}{,pp}'
+ */
+export function wildcardToRegex(wildcard: string): RegExp {
+    const regex = wildcard
+        .replaceAll('\\', '\\\\')
+        .replaceAll('-', '\\-')
+        .replaceAll('.', '\\.')
+        .replaceAll('?', '.')
+        .replaceAll('+', '\\+')
+        .replaceAll('[', '\\[')
+        .replaceAll(']', '\\]')
+        .replaceAll('{', '(')
+        .replaceAll('}', ')')
+        .replaceAll(',', '|')
+        .replaceAll(/\*{2}\//g, '.<star>/')
+        .replaceAll(/\*{2}/g, '.<star>')
+        .replaceAll('*', '[^/\\\\]<star>')
+        .replaceAll('<star>', '*');
+    return new RegExp(`^(.*/)?${regex}$`, 'i');
+}
