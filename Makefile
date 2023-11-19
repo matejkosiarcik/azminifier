@@ -10,7 +10,7 @@ PROJECT_DIR := $(abspath $(dir $(MAKEFILE_LIST)))
 
 .DEFAULT: all
 .PHONY: all
-all: clean bootstrap build test docker-build
+all: clean bootstrap build test docker-build docker-multibuild
 
 .PHONY: bootstrap
 bootstrap:
