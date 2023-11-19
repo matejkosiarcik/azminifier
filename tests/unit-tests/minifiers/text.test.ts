@@ -1,10 +1,11 @@
 import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
-async function performTest(input: string, output: string) {
+async function performTest(input: string, output: string, options?: { extension?: string | undefined } | undefined) {
+    const extension = options?.extension ?? 'txt';
     await performSimpleTest({
         input: input,
         output: output,
-        extension: 'txt',
+        extension: extension,
     });
 }
 
@@ -27,6 +28,13 @@ context('Minify Plain Text', function () {
     it(`Test minifying simple document`, async () => {
         await performTest('foo', 'foo');
     });
+
+    let markdownExtensions = ['md', 'mdown', 'markdown'];
+    for (const extension of markdownExtensions) {
+        it(`Test minifying simple markdown (.${extension}) document`, async () => {
+            await performTest('# Foo  ', '# Foo', { extension: extension });
+        });
+    }
 
     const trailingNewlineTests = [
         {

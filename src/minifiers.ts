@@ -60,6 +60,7 @@ export async function minifyFile(file: string): Promise<boolean> {
                 return 'Text' as const;
             }
             case 'md':
+            case 'mdown':
             case 'markdown': {
                 return 'Markdown' as const;
             }
