@@ -1,4 +1,4 @@
-import { performSimpleTest, setupTest, teardownTest } from '../utils/utils.ts';
+import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
 async function performTest(input: string, output: string) {
     await performSimpleTest({
