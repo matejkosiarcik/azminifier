@@ -1,0 +1,40 @@
+name: Build
+
+permissions: read-all
+
+on:
+  pull_request:
+
+env:
+  DOCKER_IMAGE: matejkosiarcik/universal-minifier
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      # fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    name: "Build ${{ matrix.platform }} image"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3.0.0
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3.0.0
+
+      - name: Build
+        uses: docker/build-push-action@v5.0.0
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+          platforms: "${{ matrix.platform }}"
+          push: false
+          tags: "${{ env.DOCKER_IMAGE }}:dev"
