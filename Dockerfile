@@ -106,7 +106,6 @@ WORKDIR /utils
 ### Final stage ###
 
 FROM debian:12.2-slim
-WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         nodejs npm \
@@ -114,7 +113,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/* /var/log/apt /var/log/dpkg* /var/cache/apt /usr/share/zsh/vendor-completions && \
     useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
 COPY --from=pre-final /usr/bin/uniminify /usr/bin/
-COPY --from=pre-final /app/ ./
+COPY --from=pre-final /app/ /app/
 ENV NODE_OPTIONS=--dns-result-order=ipv4first
 USER uniminify
 WORKDIR /project
