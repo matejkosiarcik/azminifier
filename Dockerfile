@@ -10,7 +10,7 @@
 ### CLI ###
 
 # Main CLI #
-FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS cli-build
+FROM --platform=$BUILDPLATFORM node:21.2.0-slim AS cli-build
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
@@ -42,7 +42,7 @@ RUN sh /utils/check-minifiers-custom.sh
 
 # NodeJS/NPM #
 
-FROM --platform=$BUILDPLATFORM node:21.1.0-slim AS minifiers-nodejs-build1
+FROM --platform=$BUILDPLATFORM node:21.2.0-slim AS minifiers-nodejs-build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
