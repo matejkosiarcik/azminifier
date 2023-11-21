@@ -13,7 +13,9 @@
 FROM --platform=$BUILDPLATFORM node:21.2.0-slim AS cli-build
 WORKDIR /app
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils \
+        >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -30,13 +32,15 @@ RUN sh /utils/prune-npm.sh
 FROM debian:12.2-slim AS cli-final
 WORKDIR /app
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm >/dev/null && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils nodejs npm \
+        >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=cli-build /app/node_modules ./node_modules
 COPY --from=cli-build /app/package.json ./package.json
 COPY --from=cli-build /app/dist/ ./dist/
 COPY docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
-RUN sh /utils/check-minifiers-custom.sh
+RUN chronic sh /utils/check-minifiers-custom.sh
 
 ### 3rd party minifiers ###
 
@@ -45,7 +49,9 @@ RUN sh /utils/check-minifiers-custom.sh
 FROM --platform=$BUILDPLATFORM node:21.2.0-slim AS minifiers-nodejs-build1
 WORKDIR /app
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends moreutils >/dev/null && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils \
+        >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY minifiers/package.json minifiers/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -58,15 +64,17 @@ RUN sh /utils/prune-npm.sh
 FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-nodejs-build2
 WORKDIR /app
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm inotify-tools psmisc >/dev/null && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils nodejs npm inotify-tools psmisc \
+        >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers-nodejs-build1 /app/node_modules/ ./node_modules/
 COPY --from=minifiers-nodejs-build1 /app/package.json ./package.json
-COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/check-minifiers-nodejs.sh
+COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 RUN export PATH="/app/node_modules/.bin:$PATH" && \
     touch /usage-list.txt && \
     inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
-    sh /utils/check-minifiers-nodejs.sh && \
+    chronic sh /utils/check-minifiers-nodejs.sh && \
     killall inotifywait
 COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 RUN sh /utils/prune-inotifylist.sh node_modules /usage-list.txt
@@ -74,13 +82,15 @@ RUN sh /utils/prune-inotifylist.sh node_modules /usage-list.txt
 FROM debian:12.2-slim AS minifiers-nodejs-final
 WORKDIR /app
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends nodejs npm >/dev/null && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils nodejs npm \
+        >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers-nodejs-build2 /app/node_modules ./node_modules/
 COPY --from=minifiers-nodejs-build2 /app/package.json ./package.json
-COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/check-minifiers-nodejs.sh
+COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 RUN export PATH="/app/node_modules/.bin:$PATH" && \
-    sh /utils/check-minifiers-nodejs.sh
+    chronic sh /utils/check-minifiers-nodejs.sh
 
 # TODO: More minifier environments #
 
@@ -94,8 +104,8 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/* && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify
-COPY docker-utils/sanity-checks/check-system.sh ./
-RUN chronic sh check-system.sh
+COPY docker-utils/sanity-checks/check-system.sh /utils/
+RUN chronic sh /utils/check-system.sh
 WORKDIR /app
 COPY VERSION.txt ./
 COPY --from=cli-final /app/ ./
