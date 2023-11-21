@@ -89,13 +89,13 @@ RUN export PATH="/app/node_modules/.bin:$PATH" && \
 FROM debian:12.2-slim AS pre-final
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        nodejs npm \
+        moreutils nodejs npm \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify
 COPY docker-utils/sanity-checks/check-system.sh ./
-RUN sh check-system.sh
+RUN chronic sh check-system.sh
 WORKDIR /app
 COPY VERSION.txt ./
 COPY --from=cli-final /app/ ./
