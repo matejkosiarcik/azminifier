@@ -130,7 +130,7 @@ jobs:
           docker buildx imagetools inspect "${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}"
 
   deploy-description:
-    name: Update description
+    name: Update DockerHub description
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:

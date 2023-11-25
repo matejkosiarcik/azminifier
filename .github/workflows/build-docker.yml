@@ -1,4 +1,4 @@
-name: Build
+name: Build docker
 
 permissions: read-all
 
@@ -17,7 +17,7 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
-    name: "Build ${{ matrix.platform }} image"
+    name: "Build docker - ${{ matrix.platform }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
