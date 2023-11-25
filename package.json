@@ -6,7 +6,7 @@
     "build:1-rollup": "rollup --silent --config rollup.config.js",
     "build:2-minify": "terser dist/cli.js --output dist/cli.js",
     "run": "tsx src/cli.ts",
-    "test": "mocha --exit"
+    "test": "tsx --test 'tests/unit-tests/**/*.test.ts'"
   },
   "dependencies": {
     "@esm2cjs/execa": "^6.1.1-cjs.1",
@@ -19,11 +19,9 @@
     "@rollup/plugin-typescript": "^11.1.5",
     "@tsconfig/strictest": "^2.0.2",
     "@types/chai": "^4.3.11",
-    "@types/mocha": "^10.0.6",
     "@types/node": "^20.10.0",
     "@types/yargs": "^17.0.32",
     "chai": "^4.3.10",
-    "mocha": "^10.2.0",
     "modclean": "^3.0.0-beta.1",
     "npm-run-all": "^4.1.5",
     "rollup": "^4.5.2",

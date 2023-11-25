@@ -1,3 +1,4 @@
+import { test, describe } from 'node:test';
 import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
 async function performTest(input: string, output: string, options?: { extension?: string | undefined } | undefined) {
@@ -9,29 +10,29 @@ async function performTest(input: string, output: string, options?: { extension?
     });
 }
 
-context('Minify Plain Text', function () {
+describe('Minify Plain Text', function () {
     let tmpDir: string;
     let currDir: string;
 
-    this.beforeEach(async function () {
+    test.beforeEach(async function () {
         [currDir, tmpDir] = await setupTest();
     });
 
-    this.afterEach(async function () {
+    test.afterEach(async function () {
         await teardownTest(currDir, tmpDir);
     });
 
-    it(`Test minifying empty document`, async () => {
+    test(`Test minifying empty document`, async () => {
         await performTest('', '');
     });
 
-    it(`Test minifying simple document`, async () => {
+    test(`Test minifying simple document`, async () => {
         await performTest('foo', 'foo');
     });
 
     let markdownExtensions = ['md', 'mdown', 'markdown'];
     for (const extension of markdownExtensions) {
-        it(`Test minifying simple markdown (.${extension}) document`, async () => {
+        test(`Test minifying simple markdown (.${extension}) document`, async () => {
             await performTest('# Foo  ', '# Foo', { extension: extension });
         });
     }
@@ -59,7 +60,7 @@ context('Minify Plain Text', function () {
         },
     ];
     for (const variant of trailingNewlineTests) {
-        it(`Test minifying trailing newlines - ${variant.name}`, async () => {
+        test(`Test minifying trailing newlines - ${variant.name}`, async () => {
             await performTest(variant.input, variant.output);
         });
     }
@@ -87,7 +88,7 @@ context('Minify Plain Text', function () {
         },
     ];
     for (const variant of trailingWhitespaceTests) {
-        it(`Test minifying trailing whitespace - ${variant.name}`, async () => {
+        test(`Test minifying trailing whitespace - ${variant.name}`, async () => {
             await performTest(variant.input, variant.output);
         });
     }
@@ -105,7 +106,7 @@ context('Minify Plain Text', function () {
         },
     ];
     for (const variant of otherTests) {
-        it(`Test minifying - ${variant.name}`, async () => {
+        test(`Test minifying - ${variant.name}`, async () => {
             await performTest(variant.input, variant.output);
         });
     }
