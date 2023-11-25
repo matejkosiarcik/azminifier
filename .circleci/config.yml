@@ -1,0 +1,54 @@
+version: 2.1
+
+workflows:
+  version: 2
+  circleci:
+    jobs:
+      - azlint:
+          filters:
+            branches:
+              ignore:
+                - main
+      - native-build:
+          filters:
+            branches:
+              ignore:
+                - main
+      - docker-build:
+          filters:
+            branches:
+              ignore:
+                - main
+
+jobs:
+  azlint:
+    docker:
+      - image: matejkosiarcik/azlint:0.6.11
+    steps:
+      - checkout
+      - run: azlint
+
+  native-build:
+    docker:
+      - image: debian:unstable
+    steps:
+      - checkout
+      - run:
+          name: Install system dependencies
+          command: |
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends make nodejs npm python3 python3-pip python3-venv >/dev/null
+      - run: make bootstrap
+      - run: make build
+      - run: make test
+
+  docker-build:
+    docker:
+      - image: docker:24.0.7
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Docker build
+          command: docker build . --tag matejkosiarcik/universal-minifier:dev --progress plain

@@ -1,0 +1,24 @@
+# OS stuff
+._*
+.DS_Store
+[Dd]esktop.ini
+*~
+Thumbs.db
+
+# editors
+.idea/
+.vscode/
+*.sublime-*
+*.vim
+Package Control.*
+
+# dependencies
+Brewfile.lock.json
+node_modules/
+
+# build artifacts
+/dist/
+/minifiers/js/dist/
+
+# misc
+.env
