@@ -22,12 +22,13 @@ jobs:
           fetch-depth: 0 # Full git history is needed to get a proper list of changed files
 
       - name: Run AZLint
-        run: |
-          if [ "$GITHUB_REF_NAME" = main ]; then
-            azlint
-          else
-            azlint # --only-changed # TODO: Fix
-          fi
+        run:
+          azlint
+          # if [ "$GITHUB_REF_NAME" = main ]; then
+          #   azlint
+          # else
+          #   azlint # --only-changed # TODO: Fix
+          # fi
 
   mega-linter:
     name: MegaLinter
@@ -42,7 +43,7 @@ jobs:
         uses: oxsecurity/megalinter@v7.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           DEFAULT_BRANCH: main
           MEGALINTER_CONFIG: .config/.mega-linter.yml
 
@@ -60,7 +61,7 @@ jobs:
         env:
           # global settings
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           DEFAULT_BRANCH: main
           LINTER_RULES_PATH: .config/
 

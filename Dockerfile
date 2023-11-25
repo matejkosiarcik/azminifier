@@ -92,16 +92,24 @@ COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 RUN export PATH="/app/node_modules/.bin:$PATH" && \
     chronic sh /utils/check-minifiers-nodejs.sh
 
-# TODO: More minifier environments #
-
 # Pre-Final #
+# The purpose of this stage is to be 99% the same as the final stage
+# Mainly the apt install scripts should be the same
+# But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
 FROM debian:12.2-slim AS pre-final
-RUN apt-get update -qq && \
+RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
+    apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        moreutils nodejs npm \
+        moreutils \
+        nodejs \
+        python3 python-is-python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
+    find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
+        if ! grep -- "$file" </before.txt >/dev/null; then rm -f "$file"; fi \
+    done && \
+    rm -f /before.txt && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify
 COPY docker-utils/sanity-checks/check-system.sh /utils/
@@ -116,13 +124,20 @@ WORKDIR /utils
 ### Final stage ###
 
 FROM debian:12.2-slim
-RUN apt-get update -qq && \
+RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
+    apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        nodejs npm \
+        nodejs \
+        python3 python-is-python3 \
         >/dev/null && \
-    rm -rf /var/lib/apt/lists/* /var/log/apt /var/log/dpkg* /var/cache/apt /usr/share/zsh/vendor-completions && \
+    rm -rf /var/lib/apt/lists/* && \
+    find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
+        if ! grep -- "$file" </before.txt >/dev/null; then rm -f "$file"; fi \
+    done && \
+    rm -f /before.txt && \
+    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
+    chmod a+x /usr/bin/uniminify && \
     useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
-COPY --from=pre-final /usr/bin/uniminify /usr/bin/
 COPY --from=pre-final /app/ /app/
 ENV NODE_OPTIONS=--dns-result-order=ipv4first
 USER uniminify

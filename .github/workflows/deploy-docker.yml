@@ -1,4 +1,4 @@
-name: Deploy to DockerHub
+name: Deploy
 
 permissions: read-all
 
@@ -43,7 +43,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3.0.0
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
+          username: matejkosiarcik # ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Publish
@@ -130,7 +130,7 @@ jobs:
           docker buildx imagetools inspect "${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}"
 
   deploy-description:
-    name: Update DockerHub description
+    name: Update DockerHub metadata (README, description)
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
