@@ -1,4 +1,4 @@
-name: Deploy to DockerHub
+name: Deploy
 
 permissions: read-all
 
@@ -130,7 +130,7 @@ jobs:
           docker buildx imagetools inspect "${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}"
 
   deploy-description:
-    name: Update DockerHub description
+    name: Update DockerHub metadata (README, description)
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
