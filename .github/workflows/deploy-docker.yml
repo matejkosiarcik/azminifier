@@ -140,7 +140,7 @@ jobs:
       - name: Update DockerHub description
         uses: peter-evans/dockerhub-description@v3.4.2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: matejkosiarcik/azlint
+          repository: ${{ env.DOCKER_IMAGE }}
           short-description: ${{ github.event.repository.description }}
