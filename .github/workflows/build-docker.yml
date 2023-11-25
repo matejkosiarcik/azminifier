@@ -23,7 +23,7 @@ jobs:
           - linux/ppc64le
           - linux/mips64le
           - linux/s390x
-    name: "Build docker - ${{ matrix.platform }}"
+    name: Build docker - ${{ matrix.platform }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
@@ -41,6 +41,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
-          platforms: "${{ matrix.platform }}"
+          platforms: ${{ matrix.platform }}
           push: false
-          tags: "${{ env.DOCKER_IMAGE }}:dev"
+          tags: ${{ env.DOCKER_IMAGE }}:dev
