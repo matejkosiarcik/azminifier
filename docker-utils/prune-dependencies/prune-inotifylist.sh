@@ -3,7 +3,7 @@ set -euf
 
 if [ "$#" -ne 2 ]; then
     printf 'Expected 2 arguments, got %s arguments\n' "$#" >&2
-    printf 'Usage: sh <script> <dependency-dir> <inotify-wait-file>\n' "$#" >&2
+    printf 'Usage: sh <script> <dependency-dir> <inotify-wait-file>\n' >&2
 fi
 
 dependency_dir="$1"

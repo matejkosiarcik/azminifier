@@ -1,7 +1,7 @@
 #!/bin/sh
 set -euf
 
-# shellcheck source=utils/optimize/.common.sh
+# shellcheck source=docker-utils/prune-dependencies/.common.sh
 . "$(dirname "$0")/.common.sh"
 
 cleanDependencies node_modules
@@ -20,10 +20,10 @@ removeHiddenFiles node_modules
 find node_modules -ipath '*/locale*/*' -name '*.json' -not -name 'en*.json' -delete
 
 find node_modules -type f -name '*.*' -and -not \( \
-        -name '*.js' -or \
-        -name '*.cjs' -or \
-        -name '*.mjs' -or \
-        -name '*.json' \
+    -name '*.js' -or \
+    -name '*.cjs' -or \
+    -name '*.mjs' -or \
+    -name '*.json' \
     \) -delete
 
 find node_modules -type f -not -ipath '*/yargs/*' -name '*.json' -not -name 'package.json' -delete
