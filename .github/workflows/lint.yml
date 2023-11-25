@@ -22,7 +22,8 @@ jobs:
           fetch-depth: 0 # Full git history is needed to get a proper list of changed files
 
       - name: Run AZLint
-        run: azlint
+        run:
+          azlint
           # if [ "$GITHUB_REF_NAME" = main ]; then
           #   azlint
           # else
