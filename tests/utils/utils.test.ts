@@ -1,5 +1,5 @@
 import { test, describe } from 'node:test';
-import { wildcardToRegex } from '../../../src/utils.ts';
+import { wildcardToRegex } from '../../src/utils.ts';
 import { expect } from 'chai';
 
 const regexPrefix = /^(.*\/)?/;
