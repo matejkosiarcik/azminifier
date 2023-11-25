@@ -37,16 +37,14 @@ docker-build:
 .PHONY: docker-multibuild
 docker-multibuild:
 	printf 'Build linux/amd64:\n'
-	time docker build . --tag matejkosiarcik/universal-minifier:dev-amd64 --platform linux/amd64
+	time docker build . --tag matejkosiarcik/universal-minifier:dev-x64 --platform linux/amd64
 	docker tag matejkosiarcik/universal-minifier:dev-amd64 matejkosiarcik/universal-minifier:dev-x64
 
 	printf 'Build linux/386:\n'
-	time docker build . --tag matejkosiarcik/universal-minifier:dev-386 --platform linux/386
-	docker tag matejkosiarcik/universal-minifier:dev-386 matejkosiarcik/universal-minifier:dev-x86
+	time docker build . --tag matejkosiarcik/universal-minifier:dev-x86 --platform linux/386
 
 	printf 'Build linux/arm64/v8:\n'
 	time docker build . --tag matejkosiarcik/universal-minifier:dev-arm64-v8 --platform linux/arm64/v8
-	docker tag matejkosiarcik/universal-minifier:dev-arm64-v8 matejkosiarcik/universal-minifier:dev-arm64
 
 	printf 'Build linux/arm32/v7:\n'
 	time docker build . --tag matejkosiarcik/universal-minifier:dev-arm32-v7 --platform linux/arm/v7
