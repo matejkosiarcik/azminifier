@@ -1,6 +1,8 @@
 #!/bin/sh
 set -euf
 
+# This file performs removing dependency-tree files, which were unused during a previous sanity-check
+
 if [ "$#" -ne 2 ]; then
     printf 'Expected 2 arguments, got %s arguments\n' "$#" >&2
     printf 'Usage: sh <script> <dependency-dir> <inotify-wait-file>\n' >&2
