@@ -1,4 +1,4 @@
-name: Build docker
+name: Build (docker)
 
 permissions: read-all
 
@@ -23,7 +23,7 @@ jobs:
           - linux/ppc64le
           - linux/mips64le
           - linux/s390x
-    name: Build docker - ${{ matrix.platform }}
+    name: Build ${{ matrix.platform }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
