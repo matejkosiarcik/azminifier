@@ -1,8 +1,8 @@
+import assert from 'node:assert';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import YAML from 'yaml';
-import { expect } from 'chai';
 import { minifyFile } from '../../src/minifiers.ts';
 import { setLogLevel } from '../../src/log.ts';
 
@@ -28,10 +28,10 @@ export async function performSimpleTest(options: {
     await fs.writeFile(filename, options.input, 'utf8');
 
     const returnCode = await minifyFile(filename);
-    expect(returnCode, 'File should be minified successfully with exit status 0').eq(true);
+    assert.ok(returnCode, 'File should be minified successfully with exit status 0');
 
     const minifiedContent = await fs.readFile(filename, 'utf8');
-    expect(minifiedContent, 'File should be minified as expected').eq(options.output);
+    assert.strictEqual(minifiedContent, options.output, 'File should be minified as expected');
 
     const isValid = (() => {
         try {
@@ -41,11 +41,11 @@ export async function performSimpleTest(options: {
         }
         return true;
     })();
-    expect(isValid, 'Minified YAML should be valid').eq(true);
+    assert.ok(isValid, 'Minified YAML should be valid');
 
     const returnCode2 = await minifyFile(filename);
-    expect(returnCode2, 'File should be minified successfully again with exit status 0').eq(true);
+    assert.ok(returnCode2, 'File should be minified successfully again with exit status 0');
 
     const minifiedContent2 = await fs.readFile(filename, 'utf8');
-    expect(minifiedContent2, 'File should be minified as expected again').eq(options.output);
+    assert.strictEqual(minifiedContent2, options.output, 'File should be minified as expected again');
 }
