@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import { wildcardToRegex } from '../../src/utils.ts';
-import { expect } from 'chai';
+import assert from 'node:assert';
 
 const regexPrefix = /^(.*\/)?/;
 const regexPostfix = /$/;
@@ -48,7 +48,7 @@ describe('Utils', function () {
         test(`Simple conversion wildcard -> regex [${index + 1}]`, async () => {
             const expected = `${regexPrefix.source}${variant.output.source}${regexPostfix.source}`;
             const regex = wildcardToRegex(variant.input);
-            expect(regex.source, 'Output regex should equal').eq(expected);
+            assert.strictEqual(regex.source, expected, 'Output regex should equal');
         });
     }
 
@@ -70,7 +70,7 @@ describe('Utils', function () {
         test(`Complex conversion wildcard -> regex [${index + 1}]`, async () => {
             const expected = `${regexPrefix.source}${variant.output.source}${regexPostfix.source}`;
             const regex = wildcardToRegex(variant.input);
-            expect(regex.source, 'Output regex should equal').eq(expected);
+            assert.strictEqual(regex.source, expected, 'Output regex should equal');
         });
     }
 });
