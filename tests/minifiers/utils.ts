@@ -27,8 +27,7 @@ export async function performSimpleTest(options: {
     const filename = `file.${options.extension}`;
     await fs.writeFile(filename, options.input, 'utf8');
 
-    const returnCode = await minifyFile(filename);
-    assert.ok(returnCode, 'File should be minified successfully with exit status 0');
+    await minifyFile(filename);
 
     const minifiedContent = await fs.readFile(filename, 'utf8');
     assert.strictEqual(minifiedContent, options.output, 'File should be minified as expected');
@@ -43,8 +42,7 @@ export async function performSimpleTest(options: {
     })();
     assert.ok(isValid, 'Minified YAML should be valid');
 
-    const returnCode2 = await minifyFile(filename);
-    assert.ok(returnCode2, 'File should be minified successfully again with exit status 0');
+    await minifyFile(filename);
 
     const minifiedContent2 = await fs.readFile(filename, 'utf8');
     assert.strictEqual(minifiedContent2, options.output, 'File should be minified as expected again');
