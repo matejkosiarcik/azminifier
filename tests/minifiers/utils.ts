@@ -1,8 +1,7 @@
 import assert from 'node:assert';
-import fs from 'fs/promises';
-import os from 'os';
-import path from 'path';
-import YAML from 'yaml';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { minifyFile } from '../../src/minifiers.ts';
 import { setLogLevel } from '../../src/log.ts';
 
