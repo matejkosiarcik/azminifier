@@ -47,7 +47,7 @@ async function minifyJavaScript(file: string): Promise<[boolean, string]> {
     return [true, command.all ?? '<empty>'];
 }
 
-export async function minifyFile(file: string): Promise<boolean> {
+export async function minifyFile(file: string) {
     const extension = path.extname(file).slice(1);
     const filetype = (() => {
         switch (extension) {
@@ -79,7 +79,7 @@ export async function minifyFile(file: string): Promise<boolean> {
 
     if (filetype === '') {
         log.debug(`Skipping file ${file} - Unsupported file type`);
-        return true;
+        return;
     }
 
     const originalSize = (await fs.stat(file)).size;
@@ -108,22 +108,19 @@ export async function minifyFile(file: string): Promise<boolean> {
 
     if (!minifyStatus[0]) {
         await fs.writeFile(file, originalContent);
-        // log.error(`There was error minifying ${file}: ${minifyStatus[1]}`);
         throw new Error(`There was error minifying ${file}: ${minifyStatus[1]}`);
-        // return false;
     }
 
     const afterSize = (await fs.stat(file)).size;
     if (afterSize == originalSize) {
         await fs.writeFile(file, originalContent);
         log.debug(`File ${file} was not minified, size unchanged`);
-        return true;
+        return;
     } else if (afterSize > originalSize) {
         await fs.writeFile(file, originalContent);
         log.debug(`File ${file} was not minified, size increased by +${((afterSize / originalSize) * 100 - 100).toFixed(2)}% / +${formatBytes(afterSize - originalSize)}`);
-        return true;
+        return;
     }
 
     log.debug(`Minified file ${file}, size decreased by -${((afterSize / originalSize) * 100).toFixed(2)}% / -${formatBytes(originalSize - afterSize)}`);
-    return true;
 }
