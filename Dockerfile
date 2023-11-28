@@ -65,7 +65,7 @@ FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-nodejs-build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        moreutils nodejs npm inotify-tools psmisc \
+        moreutils nodejs inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers-nodejs-build1 /app/node_modules/ ./node_modules/
@@ -77,13 +77,13 @@ RUN export PATH="/app/node_modules/.bin:$PATH" && \
     chronic sh /utils/check-minifiers-nodejs.sh && \
     killall inotifywait
 COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
-RUN sh /utils/prune-inotifylist.sh node_modules /usage-list.txt
+RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
 FROM debian:12.2-slim AS minifiers-nodejs-final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        moreutils nodejs npm \
+        moreutils nodejs \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers-nodejs-build2 /app/node_modules ./node_modules/
