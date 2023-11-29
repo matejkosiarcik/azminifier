@@ -58,8 +58,6 @@ RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
-COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
-RUN sh /utils/prune-npm.sh
 
 FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-nodejs-build2
 WORKDIR /app
@@ -71,8 +69,8 @@ RUN apt-get update -qq && \
 COPY --from=minifiers-nodejs-build1 /app/node_modules/ ./node_modules/
 COPY --from=minifiers-nodejs-build1 /app/package.json ./package.json
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
-RUN export PATH="/app/node_modules/.bin:$PATH" && \
-    touch /usage-list.txt && \
+ENV PATH="/app/node_modules/.bin:$PATH"
+RUN touch /usage-list.txt && \
     inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
     chronic sh /utils/check-minifiers-nodejs.sh && \
     killall inotifywait
@@ -89,12 +87,11 @@ RUN apt-get update -qq && \
 COPY --from=minifiers-nodejs-build2 /app/node_modules ./node_modules/
 COPY --from=minifiers-nodejs-build2 /app/package.json ./package.json
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
-RUN export PATH="/app/node_modules/.bin:$PATH" && \
-    chronic sh /utils/check-minifiers-nodejs.sh
+ENV PATH="/app/node_modules/.bin:$PATH"
+RUN chronic sh /utils/check-minifiers-nodejs.sh
 
 # Python #
 
-# FROM --platform=$BUILDPLATFORM python:3.9.18-slim AS minifiers-python-build1
 FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-python-build1
 WORKDIR /app
 RUN apt-get update -qq && \
@@ -107,8 +104,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target "$PWD/python" --quiet && \
     find /app/python -type f -iname '*.py[co]' -delete && \
     find /app/python -type d -iname '__pycache__' -prune -exec rm -rf {} \;
-# COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
-# RUN sh /utils/prune-npm.sh
 
 FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-python-build2
 WORKDIR /app
