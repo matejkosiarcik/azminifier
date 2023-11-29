@@ -92,6 +92,57 @@ COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 RUN export PATH="/app/node_modules/.bin:$PATH" && \
     chronic sh /utils/check-minifiers-nodejs.sh
 
+# Python #
+
+# FROM --platform=$BUILDPLATFORM python:3.9.18-slim AS minifiers-python-build1
+FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-python-build1
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils python3 python3-pip \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY minifiers/requirements.txt ./
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m pip install --requirement requirements.txt --target "$PWD/python" --quiet && \
+    find /app/python -type f -iname '*.py[co]' -delete && \
+    find /app/python -type d -iname '__pycache__' -prune -exec rm -rf {} \;
+# COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
+# RUN sh /utils/prune-npm.sh
+
+FROM --platform=$BUILDPLATFORM debian:12.2-slim AS minifiers-python-build2
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils python3 inotify-tools psmisc \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minifiers-python-build1 /app/python/ ./python/
+COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
+ENV PATH="/app/python/bin:$PATH" \
+    PYTHONPATH=/app/python \
+    PYTHONDONTWRITEBYTECODE=1
+RUN touch /usage-list.txt && \
+    inotifywait --daemon --recursive --event access /app/python --outfile /usage-list.txt --format '%w%f' && \
+    chronic sh /utils/check-minifiers-python.sh && \
+    killall inotifywait
+COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
+RUN sh /utils/prune-inotifylist.sh ./python /usage-list.txt
+
+FROM debian:12.2-slim AS minifiers-python-final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minifiers-python-build2 /app/python ./python/
+COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
+ENV PATH="/app/python/bin:$PATH" \
+    PYTHONPATH=/app/python \
+    PYTHONDONTWRITEBYTECODE=1
+RUN chronic sh /utils/check-minifiers-python.sh
+
 # Pre-Final #
 # The purpose of this stage is to be 99% the same as the final stage
 # Mainly the apt install scripts should be the same
@@ -101,9 +152,7 @@ FROM debian:12.2-slim AS pre-final
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        moreutils \
-        nodejs \
-        python3 python-is-python3 \
+        jq moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
     find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
@@ -119,6 +168,7 @@ COPY VERSION.txt ./
 COPY --from=cli-final /app/ ./
 WORKDIR /app/minifiers
 COPY --from=minifiers-nodejs-final /app/ ./
+COPY --from=minifiers-python-final /app/ ./
 WORKDIR /utils
 
 ### Final stage ###
@@ -127,8 +177,7 @@ FROM debian:12.2-slim
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        nodejs \
-        python3 python-is-python3 \
+        jq nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
     find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
@@ -139,7 +188,8 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' 
     chmod a+x /usr/bin/uniminify && \
     useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
 COPY --from=pre-final /app/ /app/
-ENV NODE_OPTIONS=--dns-result-order=ipv4first
+ENV NODE_OPTIONS=--dns-result-order=ipv4first \
+    PYTHONDONTWRITEBYTECODE=1
 USER uniminify
 WORKDIR /project
 ENTRYPOINT ["uniminify"]

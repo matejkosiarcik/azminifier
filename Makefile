@@ -17,6 +17,10 @@ bootstrap:
 	printf '%s\0%s\0' . minifiers | \
 		xargs -0 -P0 -n1 npm ci --no-save --no-progress --no-audit --quiet --prefix
 
+	cd "$(PROJECT_DIR)/minifiers" && \
+	PIP_DISABLE_PIP_VERSION_CHECK=1 \
+		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
+
 .PHONY: test
 test:
 	npm test
@@ -28,7 +32,8 @@ build:
 .PHONY: clean
 clean:
 	rm -rf "$(PROJECT_DIR)/node_modules" \
-		"$(PROJECT_DIR)/minifiers/node_modules"
+		"$(PROJECT_DIR)/minifiers/node_modules" \
+		"$(PROJECT_DIR)/minifiers/python" \
 
 .PHONY: docker-build
 docker-build:
