@@ -7,6 +7,9 @@ async function performTest(input: string, output: string, options?: { extension?
         input: input,
         output: output,
         extension: extension,
+        minifyOptions: {
+            preset: 'default',
+        },
     });
 }
 

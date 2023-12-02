@@ -6,6 +6,9 @@ async function performTest(input: string, output: string) {
         input: input,
         output: output,
         extension: 'yml',
+        minifyOptions: {
+            preset: 'default',
+        },
     });
 }
 

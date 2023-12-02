@@ -35,6 +35,23 @@ async function minifyYaml(file: string): Promise<[boolean, string]> {
     }
 }
 
+async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<[boolean, string]> {
+    const extraArgs = {
+        safe: [],
+        default: ['--collapse-whitespace-in-texts'],
+        brute: ['--trim-whitespace-from-texts'],
+    }[level];
+    const command = await customExeca(['minify-xml', file, '--in-place', ...extraArgs], {
+        env: {
+            PATH: `${process.env['PATH']}:${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}`
+        }
+    });
+    if (command.exitCode !== 0) {
+        return [false, command.all ?? '<empty>'];
+    }
+    return [true, command.all ?? '<empty>'];
+}
+
 async function minifyJavaScript(file: string): Promise<[boolean, string]> {
     const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
         env: {
@@ -47,13 +64,16 @@ async function minifyJavaScript(file: string): Promise<[boolean, string]> {
     return [true, command.all ?? '<empty>'];
 }
 
-export async function minifyFile(file: string) {
+export async function minifyFile(file: string, options: { preset: 'safe' | 'default' | 'brute' }) {
     const extension = path.extname(file).slice(1);
     const filetype = (() => {
         switch (extension) {
             case 'yaml':
             case 'yml': {
-                return 'Yaml' as const;
+                return 'YAML' as const;
+            }
+            case 'xml': {
+                return 'XML' as const;
             }
             case 'txt':
             case 'text': {
@@ -88,8 +108,11 @@ export async function minifyFile(file: string) {
 
     const minifyStatus = await (async () => {
         switch (filetype) {
-            case 'Yaml': {
+            case 'YAML': {
                 return minifyYaml(file);
+            }
+            case 'XML': {
+                return minifyXml(file, options.preset);
             }
             case 'Text': {
                 return minifyPlainText(file);

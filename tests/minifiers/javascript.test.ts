@@ -6,10 +6,13 @@ async function performTest(input: string, output: string) {
         input: input,
         output: output,
         extension: 'js',
+        minifyOptions: {
+            preset: 'default',
+        },
     });
 }
 
-describe('JavaScript', function () {
+describe('Minify JavaScript', function () {
     let tmpDir: string;
     let currDir: string;
 
