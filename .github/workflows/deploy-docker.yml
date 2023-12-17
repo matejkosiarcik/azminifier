@@ -77,7 +77,7 @@ jobs:
       - build-images
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4.0.0
         with:
           name: digests
           path: /tmp/digests
