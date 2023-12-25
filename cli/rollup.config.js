@@ -4,7 +4,7 @@ export default {
     input: 'src/cli.ts',
     output: {
         dir: 'dist',
-        format: 'esm'
+        format: 'esm',
     },
-    plugins: [typescript()]
+    plugins: [typescript()],
 };

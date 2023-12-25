@@ -17,13 +17,13 @@ RUN apt-get update -qq && \
         moreutils \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY package.json package-lock.json ./
+COPY cli/package.json cli/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress
-COPY tsconfig.json ./
-COPY rollup.config.js ./
-COPY src/ ./src/
+COPY cli/tsconfig.json ./
+COPY cli/rollup.config.js ./
+COPY cli/src/ ./src/
 RUN npm run --silent build && \
     npm prune --production --silent --no-progress --no-audit
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/

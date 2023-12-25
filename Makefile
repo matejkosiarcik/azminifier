@@ -14,24 +14,31 @@ all: clean bootstrap build test docker-build docker-multibuild
 
 .PHONY: bootstrap
 bootstrap:
-	printf '%s\0%s\0' . minifiers | \
-		xargs -0 -P0 -n1 npm ci --no-save --no-progress --no-audit --quiet --prefix
+	# NodeJS
+	printf '%s\n%s\n' cli minifiers | while read dir; do \
+		npm ci --no-save --no-progress --no-audit --quiet --prefix "$$dir" && \
+	true ; done
 
-	cd "$(PROJECT_DIR)/minifiers" && \
-	PIP_DISABLE_PIP_VERSION_CHECK=1 \
-		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
+	# Python
+	printf '%s\n' minifiers | while read dir; do \
+		cd "$(PROJECT_DIR)/$$dir" && \
+		PIP_DISABLE_PIP_VERSION_CHECK=1 \
+			python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade && \
+	true ; done
 
 .PHONY: test
 test:
-	npm test
+	npm --prefix cli test
 
 .PHONY: build
 build:
-	npm run build
+	npm --prefix cli run build
 
 .PHONY: clean
 clean:
-	rm -rf "$(PROJECT_DIR)/node_modules" \
+	rm -rf \
+		"$(PROJECT_DIR)/cli/dist" \
+		"$(PROJECT_DIR)/cli/node_modules" \
 		"$(PROJECT_DIR)/minifiers/node_modules" \
 		"$(PROJECT_DIR)/minifiers/python" \
 
