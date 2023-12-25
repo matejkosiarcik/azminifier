@@ -8,6 +8,8 @@ import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
 
+console.log('repo:', repoRootPath);
+
 /**
  * Remove trailing whitespace and multiple joined newlines
  */
@@ -86,7 +88,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     const command = await customExeca(['minify-xml', file, '--in-place', ...extraArgs], {
         env: {
             PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}:${process.env['PATH']}`
-        }
+        },
     });
     if (command.exitCode !== 0) {
         return [false, command.all ?? '<empty>'];
