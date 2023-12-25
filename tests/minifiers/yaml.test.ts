@@ -6,6 +6,9 @@ async function performTest(input: string, output: string) {
         input: input,
         output: output,
         extension: 'yml',
+        minifyOptions: {
+            preset: 'default',
+        },
     });
 }
 
@@ -28,11 +31,11 @@ describe('Minify YAML', function () {
         await performTest('', '');
     });
 
-    test(`Test minifying empty document - YAML 1.1`, async () => {
+    test(`Test minifying empty document - with YAML 1.1 preamble`, async () => {
         await performTest(yaml11VersionPrefix, yaml11VersionPrefix);
     });
 
-    test(`Test minifying empty document - YAML 1.2`, async () => {
+    test(`Test minifying empty document - with YAML 1.2 preamble`, async () => {
         await performTest(yaml12VersionPrefix, yaml12VersionPrefix);
     });
 

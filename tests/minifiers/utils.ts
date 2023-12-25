@@ -22,15 +22,16 @@ export async function performSimpleTest(options: {
     input: string,
     output: string,
     extension: string,
+    minifyOptions: { preset: 'safe' | 'default' | 'brute' }
 }) {
     const filename = `file.${options.extension}`;
     await fs.writeFile(filename, options.input, 'utf8');
 
-    await minifyFile(filename);
+    await minifyFile(filename, options.minifyOptions);
     const minifiedContent = await fs.readFile(filename, 'utf8');
     assert.strictEqual(minifiedContent, options.output, 'File should be minified as expected');
 
-    await minifyFile(filename);
+    await minifyFile(filename, options.minifyOptions);
     const minifiedContent2 = await fs.readFile(filename, 'utf8');
     assert.strictEqual(minifiedContent2, options.output, 'File should be minified as expected again');
 }

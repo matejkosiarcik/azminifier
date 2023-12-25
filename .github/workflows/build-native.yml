@@ -27,13 +27,20 @@ jobs:
           python-version: 3.x
 
       - name: Bootstrap
-        run: make bootstrap
         shell: bash
+        run: make bootstrap
 
       - name: Build
-        run: make build
         shell: bash
+        run: make build
+
+      - name: Dry Run
+        shell: bash
+        run: |
+          tmpdir="$(mktemp -d)"
+          npm run run -- "$tmpdir"
+          rm -rf "$tmpdir"
 
       - name: Test
-        run: make test
         shell: bash
+        run: make test
