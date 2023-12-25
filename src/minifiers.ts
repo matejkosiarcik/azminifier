@@ -8,8 +8,6 @@ import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
 
-console.log('repo:', repoRootPath);
-
 /**
  * Remove trailing whitespace and multiple joined newlines
  */
@@ -54,7 +52,7 @@ async function minifyYaml(file: string): Promise<[boolean, string]> {
     // if (originalFileContent !== '') {
     //     command = await customExeca(['yq', '--yaml-output', '--in-place', '.', file], {
     //         env: {
-    //             PATH: `${path.join(repoRootPath, 'minifiers', 'python', 'bin')}:${process.env['PATH']}`,
+    //             PATH: `${path.join(repoRootPath, 'minifiers', 'python', 'bin')}${path.delimiter}${process.env['PATH']}`,
     //             PYTHONPATH: `${path.join(repoRootPath, 'minifiers', 'python')}`,
     //             PYTHONDONTWRITEBYTECODE: '1',
     //         }
@@ -87,7 +85,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     }[level];
     const command = await customExeca(['minify-xml', file, '--in-place', ...extraArgs], {
         env: {
-            PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}:${process.env['PATH']}`
+            PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}${path.delimiter}${process.env['PATH']}`
         },
     });
     if (command.exitCode !== 0) {
@@ -99,7 +97,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
 async function minifyJavaScript(file: string): Promise<[boolean, string]> {
     const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
         env: {
-            PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}:${process.env['PATH']}`
+            PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}${path.delimiter}${process.env['PATH']}`
         }
     });
     if (command.exitCode !== 0) {

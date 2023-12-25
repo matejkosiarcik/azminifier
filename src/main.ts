@@ -22,8 +22,6 @@ export async function main(options: {
         },
     },
 }) {
-    console.log(`PATH: ${process.env['PATH']}`);
-
     const logLevel = (() => {
         const logLevels = {
             verbose: 'debug',
