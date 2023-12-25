@@ -4,34 +4,61 @@ import * as url from 'url';
 import { customExeca, formatBytes } from './utils.ts';
 import { log } from './log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
+import { ExecaReturnValue } from '@esm2cjs/execa';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
 
+function getStatusForCommand(command: ExecaReturnValue<string>): MinifierReturnStatus {
+    const results: MinifierReturnStatus = {
+        status: command.exitCode === 0,
+        message: '',
+    };
+    results.message = `Command \`${command.command}\` ${results.status ? 'succeeded' : 'failed'} with status code ${command.exitCode}\n---\n${command.all ?? '<empty>'}`
+    return results;
+}
+
+export type MinifierReturnStatus = {
+    status: boolean;
+    message: string;
+}
+
 /**
  * Remove trailing whitespace and multiple joined newlines
  */
-async function minifyPlainText(file: string): Promise<[boolean, string]> {
+async function minifyPlainText(file: string): Promise<MinifierReturnStatus> {
     try {
         const content = (await fs.readFile(file, 'utf8'))
             .split('\n').map((line) => line.replaceAll(/\s+$/g, '')).join('\n')
             .replaceAll(/\n\n\n+/gs, '\n\n')
             .replace(/\n\n$/s, '\n');
         await fs.writeFile(file, content, 'utf8');
-        return [true, ''];
+        return {
+            status: true,
+            message: '',
+        };
     } catch (error) {
-        return [false, `${error}`];
+        return {
+            status: false,
+            message: `${error}`,
+        };
     }
 }
 
 // MARK: - Config files
 
-async function minifyYaml(file: string): Promise<[boolean, string]> {
+async function minifyYaml(file: string): Promise<MinifierReturnStatus> {
     try {
         await minifyYamlCustom(file);
-        return [true, ''];
+        return {
+            status: true,
+            message: '',
+        };
     } catch (error) {
-        return [false, `${error}`];
+        return {
+            status: false,
+            message: `${error}`,
+        };
     }
 
     // function getYamlPreambleVersion(yamlContent: string): '1.1' | '1.2' | undefined {
@@ -77,7 +104,7 @@ async function minifyYaml(file: string): Promise<[boolean, string]> {
     // return [true, command.all ?? '<empty>'];
 }
 
-async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<[boolean, string]> {
+async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
     const extraArgs = {
         safe: [],
         default: ['--collapse-whitespace-in-texts'],
@@ -88,22 +115,17 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
             PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}${path.delimiter}${process.env['PATH']}`
         },
     });
-    if (command.exitCode !== 0) {
-        return [false, command.all ?? '<empty>'];
-    }
-    return [true, command.all ?? '<empty>'];
+    return getStatusForCommand(command);
 }
 
-async function minifyJavaScript(file: string): Promise<[boolean, string]> {
+async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
     const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
         env: {
             PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}${path.delimiter}${process.env['PATH']}`
         }
     });
-    if (command.exitCode !== 0) {
-        return [false, command.all ?? '<empty>'];
-    }
-    return [true, command.all ?? '<empty>'];
+
+    return getStatusForCommand(command);
 }
 
 export async function minifyFile(file: string, options: { preset: 'safe' | 'default' | 'brute' }) {
@@ -146,9 +168,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
 
     const originalSize = (await fs.stat(file)).size;
     const originalContent = await fs.readFile(file);
-    log.info(`Minifying ${filetype} file: ${file}`);
+    log.debug(`Minifying ${filetype} file: ${file}`);
 
-    const minifyStatus = await (async () => {
+    const minifyStatus: MinifierReturnStatus = await (async () => {
         switch (filetype) {
             case 'YAML': {
                 return minifyYaml(file);
@@ -166,14 +188,14 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
                 return minifyJavaScript(file);
             }
             default: {
-                return [true, ''] as const;
+                return { status: true, message: '' };
             }
         }
     })();
 
-    if (!minifyStatus[0]) {
+    if (!minifyStatus.status) {
         await fs.writeFile(file, originalContent);
-        throw new Error(`There was error minifying ${file}:\n${minifyStatus[1]}`);
+        throw new Error(`There was error minifying ${file}:\n${minifyStatus.message}`);
     }
 
     const afterSize = (await fs.stat(file)).size;
