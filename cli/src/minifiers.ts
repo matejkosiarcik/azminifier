@@ -6,7 +6,7 @@ import { log } from './log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 
 const __filename = url.fileURLToPath(import.meta.url);
-const repoRootPath = path.dirname(path.dirname(path.resolve(__filename)));
+const repoRootPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
 
 /**
  * Remove trailing whitespace and multiple joined newlines
