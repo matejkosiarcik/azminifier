@@ -84,10 +84,10 @@ import { log } from './log.ts';
                     version: args.yamlVersion as '1.1' | '1.2' | 'unset',
                     quoteAllBooleans: args.yamlAlwaysQuoteBooleans,
                 },
-            }
+            },
         });
     } catch (error) {
-        log.error(`There was an error during minification:\n${error}`);
+        log.error(error);
         process.exit(1);
     }
 })();
