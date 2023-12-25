@@ -36,7 +36,7 @@ jobs:
 
       - name: Dry Run
         shell: bash
-        run:
+        run: |
           tmpdir="$(mkdtemp)
           npm run run -- "$tmpdir"
           rm -rf "$tmpdir"
