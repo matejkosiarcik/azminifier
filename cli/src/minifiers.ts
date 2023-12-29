@@ -123,6 +123,29 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     return getStatusForCommand(command);
 }
 
+async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
+    const filepath = path.resolve(file);
+
+    const extraArgs = {
+        safe: [],
+        default: [],
+        brute: ['--nonlatin'],
+    }[level];
+    const command = await customExeca(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
+        env: {
+            PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
+            PYTHONPATH: path.dirname(binPaths.python),
+        },
+    });
+    const status = getStatusForCommand(command);
+
+    const filecontent = await fs.readFile(filepath, 'utf8');
+    const filecontent2 = filecontent.replaceAll(/#.+(\n|$)/g, '').replace(/\n+$/, '');
+    await fs.writeFile(filepath, filecontent2, 'utf8');
+
+    return status;
+}
+
 async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
     const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
         env: {
@@ -158,6 +181,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             case 'cjs': {
                 return 'JavaScript' as const;
             }
+            case 'py': {
+                return 'Python' as const;
+            }
             default: {
                 // TODO: Check if file is text file (by eg `file`)
                 // and minify it with generic plaintext minifier
@@ -191,6 +217,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             }
             case 'JavaScript': {
                 return minifyJavaScript(file);
+            }
+            case 'Python': {
+                return minifyPython(file, options.preset);
             }
             default: {
                 return { status: true, message: '' };
