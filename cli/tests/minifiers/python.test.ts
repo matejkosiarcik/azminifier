@@ -32,11 +32,11 @@ describe('Minify Python', function () {
         await performTest('foo   =   "foo"', 'foo="foo"');
     });
 
-    test(`Minify document with LF`, async () => {
-        await performTest('print()\n', 'print()');
+    test(`Minify document with line endings as LF (unix)`, async () => {
+        await performTest('print(1)\nprint(2)\n', 'print(1)\nprint(2)');
     });
 
-    test(`Minify document with CR+LF`, async () => {
-        await performTest('print()\r\n', 'print()');
+    test(`Minify document with line endings as CR+LF (windows)`, async () => {
+        await performTest('print(1)\r\nprint(2)\r\n', 'print(1)\nprint(2)');
     });
 });
