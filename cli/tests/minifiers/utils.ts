@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { minifyFile } from '../../src/minifiers.ts';
-import { setLogLevel } from '../../src/log.ts';
+import { setLogLevel } from '../../src/utils/log.ts';
 
 export async function setupTest(): Promise<[string, string]> {
     const currDir = process.cwd();
