@@ -137,6 +137,10 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
             PYTHONPATH: path.dirname(binPaths.python),
         },
     });
+    console.log('LOG ENV:', {
+        PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
+        PYTHONPATH: path.dirname(binPaths.python),
+    });
     const status = getStatusForCommand(command);
 
     const filecontent = await fs.readFile(filepath, 'utf8');
