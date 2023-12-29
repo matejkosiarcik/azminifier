@@ -15,7 +15,7 @@ env:
 
 jobs:
   build-images:
-    name: Build ${{ matrix.platform }}
+    name: Build ${{ matrix.platform }} docker image
     runs-on: ubuntu-latest
 
     strategy:
