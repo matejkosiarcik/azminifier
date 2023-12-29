@@ -65,7 +65,6 @@ jobs:
         run: |
           escaped_docker_platform="$(printf '%s' "$DOCKER_PLATFORM" | tr '/' '-')"
           printf 'DOCKER_PLATFORM="%s"\n' "$escaped_docker_platform" >> "$GITHUB_ENV"
-          grep 'DOCKER_PLATFORM' <"$GITHUB_ENV" # TODO: Remove this line
 
       - name: Export digest
         run: |
@@ -91,7 +90,7 @@ jobs:
         uses: actions/download-artifact@v4.1.0
         with:
           pattern: digest-*
-          path: /tmp/digest
+          path: /tmp/digests
           merge-multiple: true
 
       - name: Setup Docker Buildx
