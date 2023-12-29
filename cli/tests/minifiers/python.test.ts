@@ -31,4 +31,12 @@ describe('Minify Python', function () {
     test(`Minify simple document`, async () => {
         await performTest('foo   =   "foo"', 'foo="foo"');
     });
+
+    test(`Minify document with LF`, async () => {
+        await performTest('print()\n', 'print()');
+    });
+
+    test(`Minify document with CR+LF`, async () => {
+        await performTest('print()\r\n', 'print()');
+    });
 });
