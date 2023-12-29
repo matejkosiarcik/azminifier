@@ -23,7 +23,7 @@ runYq '[foo, 123, true]'
 
 runPyminifier() {
     printf '%s\n' "$1" >"$tmpdir/file.py"
-    (cd "$tmpdir" && pyminifier --output=file.py file.py)
+    (cd "$tmpdir" && pyminifier --outfile=file.py file.py)
 
     find "$tmpdir" -mindepth 1 -maxdepth 1 -exec rm -rf {} \;
 }
