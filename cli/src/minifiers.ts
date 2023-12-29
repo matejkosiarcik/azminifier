@@ -131,6 +131,13 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
         default: [],
         brute: ['--nonlatin'],
     }[level];
+
+    // TODO: Remove following log
+    console.log('LOG ENV:', {
+        PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
+        PYTHONPATH: path.dirname(binPaths.python),
+    });
+
     const command = await customExeca(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
         env: {
             PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
@@ -138,11 +145,10 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
         },
     });
 
-    // TODO: Remove following log
-    console.log('LOG ENV:', {
-        PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
-        PYTHONPATH: path.dirname(binPaths.python),
-    });
+    console.log('Command status:', command.exitCode);
+    console.log('Command output:', command.all);
+    console.log('Command signal:', command.signal);
+    console.log('Command other:', command.isCanceled, command.failed);
 
     const status = getStatusForCommand(command);
 
