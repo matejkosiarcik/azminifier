@@ -125,19 +125,11 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
 
 async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
     const filepath = path.resolve(file);
-    console.log('FilePath:', filepath);
-
     const extraArgs = {
         safe: [],
         default: [],
         brute: ['--nonlatin'],
     }[level];
-
-    // TODO: Remove following log
-    console.log('LOG ENV:', {
-        PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
-        PYTHONPATH: path.dirname(binPaths.python),
-    });
 
     const command = await customExeca(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
         env: {
@@ -146,21 +138,13 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
         },
     });
 
-    console.log('Command status:', command.exitCode);
-    console.log('Command output:', command.all);
-    console.log('Command signal:', command.signal);
-    console.log('Command other:', command.isCanceled, command.failed);
-
     const status = getStatusForCommand(command);
 
-    const filecontent = await fs.readFile(filepath, 'utf8');
-    console.log('filecontent1:', filecontent.length, filecontent, '---');
-    const filecontent2 = filecontent.replaceAll('\r\n', '\n').replace(/#.+?\n$/g, '').replace(/[\n\r]+$/, '');
-    console.log('filecontent2:', filecontent2.length, filecontent2, '---');
-    await fs.writeFile(filepath, filecontent2, 'utf8');
-
-    console.log('Post content1:', await fs.readFile(filepath, 'utf8'), '---');
-    console.log('Post content2:', await fs.readFile(file, 'utf8'), '---');
+    const newFileContent = (await fs.readFile(filepath, 'utf8'))
+        .replaceAll('\r\n', '\n')
+        .replace(/#.+?\n$/g, '')
+        .replace(/[\n\r]+$/, '');
+    await fs.writeFile(filepath, newFileContent, 'utf8');
 
     return status;
 }
