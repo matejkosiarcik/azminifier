@@ -125,6 +125,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
 
 async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
     const filepath = path.resolve(file);
+    console.log('FilePath:', filepath);
 
     const extraArgs = {
         safe: [],
