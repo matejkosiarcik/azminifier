@@ -1,4 +1,4 @@
-import { log, setLogLevel } from './log.ts';
+import { log, setLogLevel } from './utils/log.ts';
 import { minifyFile } from './minifiers.ts';
 import { findFiles } from './utils.ts';
 

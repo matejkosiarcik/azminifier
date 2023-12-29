@@ -59,6 +59,14 @@ jobs:
           cache-to: type=gha,mode=max
           outputs: type=image,name=${{ env.DOCKER_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
+      - name: Export platform
+        env:
+          DOCKER_PLATFORM: ${{ matrix.platform }}
+        run: |
+          escaped_docker_platform="$(printf '%s' "$DOCKER_PLATFORM" | tr '/' '-')"
+          printf 'Docker platform: %s\n' "$escaped_docker_platform" # TODO: Remove this line
+          printf '%s\n' "$escaped_docker_platform" >> "$GITHUB_ENV"
+
       - name: Export digest
         run: |
           mkdir -p /tmp/digests

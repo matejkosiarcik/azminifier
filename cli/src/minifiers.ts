@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import * as url from 'url';
 import { customExeca, formatBytes } from './utils.ts';
-import { log } from './log.ts';
+import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { ExecaReturnValue } from '@esm2cjs/execa';
 
@@ -22,6 +22,11 @@ export type MinifierReturnStatus = {
     status: boolean;
     message: string;
 }
+
+const binPaths = {
+    python: path.join(repoRootPath, 'minifiers', 'python', 'bin'),
+    nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
+};
 
 /**
  * Remove trailing whitespace and multiple joined newlines
@@ -79,8 +84,8 @@ async function minifyYaml(file: string): Promise<MinifierReturnStatus> {
     // if (originalFileContent !== '') {
     //     command = await customExeca(['yq', '--yaml-output', '--in-place', '.', file], {
     //         env: {
-    //             PATH: `${path.join(repoRootPath, 'minifiers', 'python', 'bin')}${path.delimiter}${process.env['PATH']}`,
-    //             PYTHONPATH: `${path.join(repoRootPath, 'minifiers', 'python')}`,
+    //             PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
+    //             PYTHONPATH: path.dirname(binPaths.python),
     //             PYTHONDONTWRITEBYTECODE: '1',
     //         }
     //     });
@@ -112,16 +117,42 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     }[level];
     const command = await customExeca(['minify-xml', file, '--in-place', ...extraArgs], {
         env: {
-            PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}${path.delimiter}${process.env['PATH']}`
+            PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         },
     });
     return getStatusForCommand(command);
 }
 
+async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
+    const filepath = path.resolve(file);
+    const extraArgs = {
+        safe: [],
+        default: [],
+        brute: ['--nonlatin'],
+    }[level];
+
+    const command = await customExeca(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
+        env: {
+            PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
+            PYTHONPATH: path.dirname(binPaths.python),
+        },
+    });
+
+    const status = getStatusForCommand(command);
+
+    const newFileContent = (await fs.readFile(filepath, 'utf8'))
+        .replaceAll('\r\n', '\n')
+        .replace(/#.+?\n$/g, '')
+        .replace(/[\n\r]+$/, '');
+    await fs.writeFile(filepath, newFileContent, 'utf8');
+
+    return status;
+}
+
 async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
     const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
         env: {
-            PATH: `${path.join(repoRootPath, 'minifiers', 'node_modules', '.bin')}${path.delimiter}${process.env['PATH']}`
+            PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         }
     });
 
@@ -152,6 +183,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             case 'mjs':
             case 'cjs': {
                 return 'JavaScript' as const;
+            }
+            case 'py': {
+                return 'Python' as const;
             }
             default: {
                 // TODO: Check if file is text file (by eg `file`)
@@ -186,6 +220,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             }
             case 'JavaScript': {
                 return minifyJavaScript(file);
+            }
+            case 'Python': {
+                return minifyPython(file, options.preset);
             }
             default: {
                 return { status: true, message: '' };
