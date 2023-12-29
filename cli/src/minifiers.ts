@@ -155,7 +155,7 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
 
     const filecontent = await fs.readFile(filepath, 'utf8');
     console.log('filecontent1:', filecontent.length, filecontent, '---');
-    const filecontent2 = filecontent.replace(/[#\#].+?\n$/g, '').replace(/[\n\r]+$/, '');
+    const filecontent2 = filecontent.replace(/#.+?\n$/g, '').replace(/[\n\r]+$/, '');
     console.log('filecontent2:', filecontent2.length, filecontent2, '---');
     await fs.writeFile(filepath, filecontent2, 'utf8');
 
