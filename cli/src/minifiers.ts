@@ -140,7 +140,7 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
     const status = getStatusForCommand(command);
 
     const filecontent = await fs.readFile(filepath, 'utf8');
-    const filecontent2 = filecontent.replaceAll(/#.+(\n|$)/g, '').replace(/\n+$/, '');
+    const filecontent2 = filecontent.replaceAll(/#.+(\n|$)/g, '').replace(/[\n\r]+$/, '');
     await fs.writeFile(filepath, filecontent2, 'utf8');
 
     return status;
