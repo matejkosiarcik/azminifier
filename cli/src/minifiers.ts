@@ -154,10 +154,13 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
     const status = getStatusForCommand(command);
 
     const filecontent = await fs.readFile(filepath, 'utf8');
-    console.log('filecontent1:', filecontent);
-    const filecontent2 = filecontent.replaceAll(/#.+(\n|$)/g, '').replace(/[\n\r]+$/, '');
-    console.log('filecontent2:', filecontent2);
+    console.log('filecontent1:', filecontent, '---');
+    const filecontent2 = filecontent.replaceAll(/[#\#].+(\n|$)/g, '').replace(/[\n\r]+$/, '');
+    console.log('filecontent2:', filecontent2, '---');
     await fs.writeFile(filepath, filecontent2, 'utf8');
+
+    console.log('Post content1:', await fs.readFile(filepath, 'utf8'), '---');
+    console.log('Post content1:', await fs.readFile(file, 'utf8'), '---');
 
     return status;
 }
