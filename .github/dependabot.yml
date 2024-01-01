@@ -17,6 +17,22 @@ updates:
         patterns:
           - "*"
 
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+      time: "00:30"
+      timezone: Europe/Bratislava
+    reviewers:
+      - matejkosiarcik
+    assignees:
+      - matejkosiarcik
+    open-pull-requests-limit: 1
+    groups:
+      docker:
+        patterns:
+          - "*"
+
   - package-ecosystem: npm
     directory: /cli/
     schedule:
