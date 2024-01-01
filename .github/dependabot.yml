@@ -13,12 +13,12 @@ updates:
       - matejkosiarcik
     open-pull-requests-limit: 1
     groups:
-      all-dependencies:
+      github-actions:
         patterns:
           - "*"
 
   - package-ecosystem: npm
-    directory: /
+    directory: /cli/
     schedule:
       interval: daily
       time: "00:45"
@@ -28,6 +28,10 @@ updates:
     assignees:
       - matejkosiarcik
     open-pull-requests-limit: 1
+    groups:
+      npm[cli]:
+        patterns:
+          - "*"
 
   - package-ecosystem: npm
     directory: /minifiers
@@ -40,3 +44,23 @@ updates:
     assignees:
       - matejkosiarcik
     open-pull-requests-limit: 1
+    groups:
+      npm[minifiers]:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /minifiers
+    schedule:
+      interval: daily
+      time: "01:45"
+      timezone: Europe/Bratislava
+    reviewers:
+      - matejkosiarcik
+    assignees:
+      - matejkosiarcik
+    open-pull-requests-limit: 1
+    groups:
+      pip[minifiers]:
+        patterns:
+          - "*"
