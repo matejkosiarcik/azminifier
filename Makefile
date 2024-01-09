@@ -33,7 +33,8 @@ bootstrap:
 
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin" && \
 		ls -lah && \
-		ln -s gitman.exe gitman
+		cp gitman.exe gitman && \
+		ls -lah
 
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
