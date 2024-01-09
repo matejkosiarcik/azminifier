@@ -32,6 +32,7 @@ bootstrap:
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
 	echo "$$PATH"
+	echo "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin"
 
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
