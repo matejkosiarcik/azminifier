@@ -31,7 +31,11 @@ bootstrap:
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
-	echo system "$$(uname -s)"
+	echo system:
+	uname -s
+	uname -m
+	uname -a
+	uname
 
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
