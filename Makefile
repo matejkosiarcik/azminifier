@@ -34,7 +34,7 @@ bootstrap:
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
 		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
-		separator="$(shell if [ "$$(uname -s)" = Windows ]; then printf ';' ; else printf ':' ; fi)" && \
+		separator="$(shell if [ "$(shell uname -s)" = Windows ]; then printf ';' ; else printf ':' ; fi)" && \
 		echo "separator: $$separator$$separator" && \
 		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin$$separator$$PATH" \
 		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
