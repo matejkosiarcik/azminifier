@@ -32,6 +32,7 @@ bootstrap:
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin" && \
+		ls -lah && \
 		ln -s gitman.exe gitman
 
 	# Gitman repositories
