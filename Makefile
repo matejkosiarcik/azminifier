@@ -33,7 +33,7 @@ bootstrap:
 
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin" && \
 		ls -lah && \
-		cp gitman.exe gitman && \
+		ln -sf gitman.exe gitman && \
 		ls -lah
 
 	# Gitman repositories
