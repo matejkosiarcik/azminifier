@@ -31,6 +31,9 @@ bootstrap:
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
+	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin" && \
+		ls -lah
+
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
 		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
