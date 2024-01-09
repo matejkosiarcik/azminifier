@@ -35,7 +35,7 @@ bootstrap:
 	printf '%s\n' bash-minifier | while read -r dir; do \
 		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
 		separator="$$(if [ "$$(uname -s)" = Windows ]; then printf ';' ; else printf ':' ; fi)" && \
-		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin$${separator}$${PATH}" \
+		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin$$separator$$PATH" \
 		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
 		PYTHONDONTWRITEBYTECODE=1 \
 			gitman install --quiet --force && \
