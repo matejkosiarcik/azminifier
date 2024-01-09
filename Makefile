@@ -31,12 +31,14 @@ bootstrap:
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
+	echo "$$PATH"
+
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
 		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
 		separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
 		echo "separator: $$separator$$separator" && \
-		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin$${separator}$${PATH}" \
+		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" \
 		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
 		PYTHONDONTWRITEBYTECODE=1 \
 			gitman.exe install --quiet --force && \
