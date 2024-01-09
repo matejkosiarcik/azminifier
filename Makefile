@@ -41,7 +41,7 @@ bootstrap:
 		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" \
 		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
 		PYTHONDONTWRITEBYTECODE=1 \
-			gitman.exe install --quiet --force && \
+			gitman install --quiet --force && \
 	true ; done
 
 .PHONY: test
