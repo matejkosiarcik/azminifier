@@ -34,10 +34,10 @@ bootstrap:
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
 		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
-		separator="$(shell if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
+		separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
 		echo "separator: $$separator$$separator" && \
-		PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin$$separator$$PATH" \
-		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
+		PATH="$(PROJECT_DIR)\docker-utils\dependencies\gitman\python\bin$${separator}$${PATH}" \
+		PYTHONPATH="$(PROJECT_DIR)\docker-utils\dependencies\gitman\python" \
 		PYTHONDONTWRITEBYTECODE=1 \
 			gitman install --quiet --force && \
 	true ; done
