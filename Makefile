@@ -6,7 +6,7 @@ SHELL := /bin/sh
 PROJECT_DIR := $(abspath $(dir $(MAKEFILE_LIST)))
 
 IS_MINGW := $(shell if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf 'y' ; else printf 'n' ; fi)
-PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%%s' "$(PROJECT_DIR)" | sed -E 's~^(.+):~/\L\1~'; else printf '%%s' "$(PROJECT_DIR)"; fi)
+PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%s' "$(PROJECT_DIR)" | sed -E 's~^(.+):~/\L\1~'; else printf '%s' "$(PROJECT_DIR)"; fi)
 
 .POSIX:
 .SILENT:
