@@ -5,6 +5,9 @@ SHELL := /bin/sh
 .SHELLFLAGS := -ec
 PROJECT_DIR := $(abspath $(dir $(MAKEFILE_LIST)))
 
+IS_MINGW := $(shell if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf 'y' ; else printf 'n' ; fi)
+PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%%s' "$(PROJECT_DIR)" | sed -E 's~^(.+):~/\L\1~'; else printf '%%s' "$(PROJECT_DIR)"; fi)
+
 .POSIX:
 .SILENT:
 
@@ -31,24 +34,9 @@ bootstrap:
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
-	echo "$$PATH"
-	echo "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin"
-
-	# echo "which1:"
-	# separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
-	# PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
-	# which gitman
-
-	# echo "which2:" && \
-	# separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
-	# setx -m PATH "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin;%PATH%" && \
-	# PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
-	# which gitman
-
-	echo "which3:" && \
-	project_dir="$$(echo "$(PROJECT_DIR)" | sed -E 's~^(.+):~/\L\1~')" && \
-	PATH="$${project_dir}/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
-	which gitman
+	PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" && \
+	echo "PATH: $$PATH" && \
+	echo "which: $$(which gitman)"
 
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
