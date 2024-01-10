@@ -47,7 +47,7 @@ bootstrap:
 
 	echo "which3:" && \
 	project_dir="$$(echo "$$PROJECT_DIR" | sed -E 's~^.+:~~')" && \
-	PATH="$(project_dir)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
+	PATH="$${project_dir}/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
 	which gitman
 
 	# Gitman repositories
