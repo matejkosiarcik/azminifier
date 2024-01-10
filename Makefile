@@ -34,6 +34,10 @@ bootstrap:
 	echo "$$PATH"
 	echo "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin"
 
+	separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
+	PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}"
+	which gitman
+
 	# Gitman repositories
 	printf '%s\n' bash-minifier | while read -r dir; do \
 		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
