@@ -34,8 +34,14 @@ bootstrap:
 	echo "$$PATH"
 	echo "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin"
 
+	echo "which1:"
 	separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
-	PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}"
+	PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
+	which gitman
+
+	echo "which2:" && \
+	separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
+	setx -m PATH "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin;%PATH%" && \
 	which gitman
 
 	# Gitman repositories
