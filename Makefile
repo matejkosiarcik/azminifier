@@ -5,6 +5,9 @@ SHELL := /bin/sh
 .SHELLFLAGS := -ec
 PROJECT_DIR := $(abspath $(dir $(MAKEFILE_LIST)))
 
+IS_MINGW := $(shell if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf 'y' ; else printf 'n' ; fi)
+PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%s' "$(PROJECT_DIR)" | sed -E 's~^(.+):~/\L\1~'; else printf '%s' "$(PROJECT_DIR)"; fi)
+
 .POSIX:
 .SILENT:
 
@@ -24,6 +27,20 @@ bootstrap:
 		cd "$(PROJECT_DIR)/$$dir" && \
 		PIP_DISABLE_PIP_VERSION_CHECK=1 \
 			python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade && \
+	true ; done
+
+	# Gitman package
+	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman" && \
+	PIP_DISABLE_PIP_VERSION_CHECK=1 \
+		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
+
+	# Gitman repositories
+	printf '%s\n' bash-minifier | while read -r dir; do \
+		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
+		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
+		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
+		PYTHONDONTWRITEBYTECODE=1 \
+			gitman install --quiet --force && \
 	true ; done
 
 .PHONY: test
