@@ -39,10 +39,15 @@ bootstrap:
 	# PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
 	# which gitman
 
-	echo "which2:" && \
-	separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
-	setx -m PATH "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin;%PATH%" && \
-	PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
+	# echo "which2:" && \
+	# separator="$$(if uname -s | grep -E ^MINGW >/dev/null 2>&1; then printf ';' ; else printf ':' ; fi)" && \
+	# setx -m PATH "$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin;%PATH%" && \
+	# PATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
+	# which gitman
+
+	echo "which3:" && \
+	project_dir="$$(echo "$$PROJECT_DIR" | sed -E 's~^.+:~~')" && \
+	PATH="$(project_dir)/docker-utils/dependencies/gitman/python/bin:$${PATH}" && \
 	which gitman
 
 	# Gitman repositories
