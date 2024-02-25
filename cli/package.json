@@ -13,7 +13,7 @@
     "@esm2cjs/execa": "^6.1.1-cjs.1",
     "tslib": "^2.6.2",
     "winston": "^3.11.0",
-    "yaml": "^2.3.4",
+    "yaml": "^2.4.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
