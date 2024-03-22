@@ -1,5 +1,4 @@
 import fs from 'fs/promises';
-// import process from 'process';
 import YAML, { ParseOptions as YamlParseOptions, DocumentOptions as YamlDocumentOptions } from 'yaml';
 
 function getYamlPreambleVersion(yamlContent: string): '1.1' | '1.2' | undefined {
