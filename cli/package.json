@@ -6,7 +6,7 @@
     "build:1-rollup": "rollup --silent --config rollup.config.js",
     "build:2-minify": "terser dist/cli.js --output dist/cli.js",
     "run": "tsx src/cli.ts",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "playwright test",
     "test:only": "tsx --test --test-only tests/**/*.test.ts"
   },
   "dependencies": {

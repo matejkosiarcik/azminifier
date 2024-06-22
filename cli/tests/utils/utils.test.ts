@@ -1,11 +1,11 @@
-import { test, describe } from 'node:test';
+import { test } from '@playwright/test';
 import { wildcardToRegex } from '../../src/utils/utils.ts';
 import assert from 'node:assert';
 
 const regexPrefix = /^(.*\/)?/;
 const regexPostfix = /$/;
 
-describe('Utils', function () {
+test.describe('Utils', () => {
     const variants = [
         {
             input: '.',
