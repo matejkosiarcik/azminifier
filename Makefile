@@ -65,6 +65,7 @@ docker-build:
 
 .PHONY: docker-multibuild
 docker-multibuild:
+	set -e && \
 	printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n' 386 amd64 arm/v5 arm/v7 arm64/v8 ppc64le s390x | \
 		while read -r arch; do \
 			printf 'Building for linux/%s:\n' "$$arch" && \
