@@ -58,18 +58,6 @@ ENV PATH="/app/python/bin:$PATH" \
 
 ### 3rd party minifiers ###
 
-# Bash-minifier #
-FROM --platform=$BUILDPLATFORM gitman-reusable AS minifiers-bash-build1
-COPY minifiers/gitman/bash-minifier/gitman.yml ./
-RUN --mount=type=cache,target=/root/.gitcache \
-    gitman install --quiet
-
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-bash-final
-WORKDIR /app
-COPY --from=minifiers-bash-build1 /app/gitman/bash-minifier ./bash-minifier/
-
-# TODO: Run sanity check and remove files which are unused (inotifywait)
-
 # NodeJS/NPM #
 
 FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS minifiers-nodejs-build1

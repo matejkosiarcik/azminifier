@@ -1,10 +1,11 @@
 import path from 'path';
 import fs from 'fs/promises';
 import * as url from 'url';
-import { customExeca, formatBytes } from './utils.ts';
+import { customExeca, formatBytes } from './utils/utils.ts';
 import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { ExecaReturnValue } from '@esm2cjs/execa';
+import { minifyShellCustom } from './custom-minifiers/shell.ts';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
@@ -159,6 +160,22 @@ async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
     return getStatusForCommand(command);
 }
 
+async function minifyShell(file: string): Promise<MinifierReturnStatus> {
+    try {
+        await minifyShellCustom(file);
+    } catch (error) {
+        return {
+            status: false,
+            message: error instanceof Error ? error.message : `${error}`,
+        };
+    }
+
+    return {
+        status: true,
+        message: '',
+    };
+}
+
 export async function minifyFile(file: string, options: { preset: 'safe' | 'default' | 'brute' }) {
     const extension = path.extname(file).slice(1);
     const filetype = (() => {
@@ -186,6 +203,11 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             }
             case 'py': {
                 return 'Python' as const;
+            }
+            case 'bash':
+            case 'sh':
+            case 'zsh': {
+                return 'Shell' as const;
             }
             default: {
                 // TODO: Check if file is text file (by eg `file`)
@@ -223,6 +245,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             }
             case 'Python': {
                 return minifyPython(file, options.preset);
+            }
+            case 'Shell': {
+                return minifyShell(file);
             }
             default: {
                 return { status: true, message: '' };

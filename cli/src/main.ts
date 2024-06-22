@@ -1,6 +1,6 @@
 import { log, setLogLevel } from './utils/log.ts';
 import { minifyFile } from './minifiers.ts';
-import { findFiles } from './utils.ts';
+import { findFiles } from './utils/utils.ts';
 
 export type presetType = 'safe' | 'default' | 'brute';
 
