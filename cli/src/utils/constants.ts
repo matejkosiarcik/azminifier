@@ -1,5 +1,5 @@
-import path from 'path';
-import * as url from 'url';
+import path from 'node:path';
+import * as url from 'node:url';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.dirname(path.dirname(path.resolve(__filename)))));

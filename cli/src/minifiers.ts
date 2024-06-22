@@ -1,6 +1,6 @@
-import path from 'path';
-import fs from 'fs/promises';
-import * as url from 'url';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import * as url from 'node:url';
 import { customExeca, formatBytes } from './utils/utils.ts';
 import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
