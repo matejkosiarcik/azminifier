@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import * as url from 'url';
-import { customExeca, formatBytes } from './utils.ts';
+import { customExeca, formatBytes } from './utils/utils.ts';
 import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { ExecaReturnValue } from '@esm2cjs/execa';
