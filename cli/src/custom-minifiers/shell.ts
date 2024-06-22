@@ -34,7 +34,18 @@ function postProcessFile(fileContent: string, mode: 'bash' | 'zsh'): string {
     }
 }
 
-export async function minifyShellCustom(shellFile: string, mode: 'bash' | 'sh' | 'zsh') {
+export async function minifyShellCustom(shellFile: string) {
+    const extension = path.extname(shellFile).slice(1);
+    const mode: 'bash' | 'sh' | 'zsh' = (() => {
+        if (extension === 'bash') {
+            return 'bash';
+        } else if (extension === 'zsh') {
+            return 'zsh'
+        } else {
+            return 'sh';
+        }
+    })();
+
     const shellContent = await fs.readFile(shellFile, 'utf8');
     if (shellContent === '') {
         // Guard against empty files

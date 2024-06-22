@@ -1,15 +1,19 @@
 import { test, describe } from 'node:test';
 import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
-async function performTest(input: string, output: string) {
-    await performSimpleTest({
-        input: input,
-        output: output,
-        extension: 'bash',
-        minifyOptions: {
-            preset: 'default',
-        },
-    });
+async function performTest(input: string, output: string, variant?: 'bash' | 'sh' | 'zsh' | ('bash' | 'sh' | 'zsh')[] | undefined) {
+    const variants = variant ? (Array.isArray(variant) ? variant : [variant]) : ['bash', 'sh'];
+
+    for (const variant of variants) {
+        await performSimpleTest({
+            input: input,
+            output: output,
+            extension: variant,
+            minifyOptions: {
+                preset: 'default',
+            },
+        });
+    }
 }
 
 describe('Minify Bash', function () {

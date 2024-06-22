@@ -160,9 +160,9 @@ async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
     return getStatusForCommand(command);
 }
 
-async function minifyBash(file: string): Promise<MinifierReturnStatus> {
+async function minifyShell(file: string): Promise<MinifierReturnStatus> {
     try {
-        await minifyShellCustom(file, 'bash');
+        await minifyShellCustom(file);
     } catch (error) {
         return {
             status: false,
@@ -204,9 +204,10 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             case 'py': {
                 return 'Python' as const;
             }
+            case 'bash':
             case 'sh':
-            case 'bash': {
-                return 'Bash' as const;
+            case 'zsh': {
+                return 'Shell' as const;
             }
             default: {
                 // TODO: Check if file is text file (by eg `file`)
@@ -245,8 +246,8 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             case 'Python': {
                 return minifyPython(file, options.preset);
             }
-            case 'Bash': {
-                return minifyBash(file);
+            case 'Shell': {
+                return minifyShell(file);
             }
             default: {
                 return { status: true, message: '' };
