@@ -1,6 +1,5 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { wildcardToRegex } from '../../src/utils/utils.ts';
-import assert from 'node:assert';
 
 const regexPrefix = /^(.*\/)?/;
 const regexPostfix = /$/;
@@ -48,7 +47,7 @@ test.describe('Utils', () => {
         test(`Simple conversion wildcard -> regex [${index + 1}]`, async () => {
             const expected = `${regexPrefix.source}${variant.output.source}${regexPostfix.source}`;
             const regex = wildcardToRegex(variant.input);
-            assert.strictEqual(regex.source, expected, 'Output regex should equal');
+            expect(regex.source, 'Output regex should equal').toEqual(expected);
         });
     }
 
@@ -70,7 +69,7 @@ test.describe('Utils', () => {
         test(`Complex conversion wildcard -> regex [${index + 1}]`, async () => {
             const expected = `${regexPrefix.source}${variant.output.source}${regexPostfix.source}`;
             const regex = wildcardToRegex(variant.input);
-            assert.strictEqual(regex.source, expected, 'Output regex should equal');
+            expect(regex.source, 'Output regex should equal').toEqual(expected);
         });
     }
 });
