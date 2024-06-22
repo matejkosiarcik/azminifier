@@ -28,7 +28,7 @@ jobs:
           python-version: 3.x
 
       - name: Install HomeBrew dependencies
-        if: ${{ matrix.os == 'linux-latest' }}
+        if: ${{ matrix.os == 'macos-latest' }}
         run: brew install bash zsh
 
       - name: Bootstrap
