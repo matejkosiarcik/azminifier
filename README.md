@@ -1,6 +1,6 @@
-# Universal minifier
+# Unnecessary minifier
 
-> Universal minifier for all file types
+> Unnecessary minifier for text files
 
 <details>
 <summary>Table of contents</summary>
@@ -20,13 +20,13 @@ This project is in early stage of development.
 For minifying files in current directory, run:
 
 ```sh
-docker run --rm -v "$PWD:/project" matejkosiarcik/universal-minifier:latest
+docker run --rm -v "$PWD:/project" matejkosiarcik/unnecessary-minifier:latest
 ```
 
 Here is a list of all available CLI options:
 
 ```sh
-$ docker run --rm -v "$PWD:/project" matejkosiarcik/universal-minifier:latest --help
+$ docker run --rm -v "$PWD:/project" matejkosiarcik/unnecessary-minifier:latest --help
 
 uniminify [options] <path..>
 
