@@ -30,7 +30,7 @@ jobs:
 
   native-build:
     docker:
-      - image: debian:testing
+      - image: debian:12.5
     steps:
       - checkout
       - run:
