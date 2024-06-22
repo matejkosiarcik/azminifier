@@ -35,13 +35,13 @@ bootstrap:
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
 	# Gitman repositories
-	printf '%s\n' bash-minifier | while read -r dir; do \
-		cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
-		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
-		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
-		PYTHONDONTWRITEBYTECODE=1 \
-			gitman install --quiet --force && \
-	true ; done
+	# printf '%s\n' <empty> | while read -r dir; do \
+	# 	cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
+	# 	PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
+	# 	PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
+	# 	PYTHONDONTWRITEBYTECODE=1 \
+	# 		gitman install --quiet --force && \
+	# true ; done
 
 .PHONY: test
 test:
