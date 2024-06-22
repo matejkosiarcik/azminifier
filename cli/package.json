@@ -10,7 +10,7 @@
     "test:only": "tsx --test --test-only tests/**/*.test.ts"
   },
   "dependencies": {
-    "@esm2cjs/execa": "^6.1.1-cjs.1",
+    "execa": "^9.3.0",
     "tslib": "^2.6.3",
     "winston": "^3.13.0",
     "yaml": "^2.4.5",

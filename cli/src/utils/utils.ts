@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import fsSync from 'fs';
-import { execa, ExecaError, Options as ExecaOptions, ExecaReturnValue } from "@esm2cjs/execa";
+import { execa as baseExeca, ExecaError, Options as ExecaOptions, Result as ExecaResult } from 'execa';
 
 export async function findFiles(fspath: string): Promise<string[]> {
     if (!fsSync.existsSync(fspath)) {
@@ -38,19 +38,33 @@ export function filterFiles(list: string[], extension: string | string[]): strin
 /**
  * Custom `execa` wrapper with useful default options
  */
-export async function customExeca(command: string[], options?: ExecaOptions<string>): Promise<ExecaReturnValue<string>> {
+export async function execa(command: string[], options?: ExecaOptions): Promise<ExecaResult | ExecaError> {
     options = {
         timeout: 60_000, // 1 minute
         stdio: 'pipe', // Capture output
         all: true, // Merge stdout and stderr
+        encoding: 'utf8',
         ...options ?? {},
     };
 
     try {
-        const program = await execa(command[0], command.slice(1), options);
+        const program = await baseExeca(command[0], command.slice(1), options);
         return program;
     } catch (error) {
         return error as ExecaError;
+    }
+}
+
+export function getExecaOutput(executedCommand: ExecaResult | ExecaError): string {
+    const output = executedCommand.stdout;
+    if (typeof output === 'string') {
+        return output;
+    } else if (Array.isArray(output)) {
+        return output.join('\n');
+    } else if (output) {
+        return Buffer.from(output).toString('utf8');
+    } else {
+        return '';
     }
 }
 
