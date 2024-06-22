@@ -84,12 +84,13 @@ COPY --from=minifiers-nodejs-build1 /app/node_modules/ ./node_modules/
 COPY --from=minifiers-nodejs-build1 /app/package.json ./package.json
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 ENV PATH="/app/node_modules/.bin:$PATH"
-RUN touch /usage-list.txt && \
-    inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
-    chronic sh /utils/check-minifiers-nodejs.sh && \
-    killall inotifywait
-COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
-RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
+# TODO: Reenable
+# RUN touch /usage-list.txt && \
+#     inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
+#     chronic sh /utils/check-minifiers-nodejs.sh && \
+#     killall inotifywait
+# COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
+# RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
 FROM debian:12.5-slim AS minifiers-nodejs-final
 WORKDIR /app
@@ -131,12 +132,13 @@ COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
 ENV PATH="/app/python/bin:$PATH" \
     PYTHONPATH=/app/python \
     PYTHONDONTWRITEBYTECODE=1
-RUN touch /usage-list.txt && \
-    inotifywait --daemon --recursive --event access /app/python --outfile /usage-list.txt --format '%w%f' && \
-    chronic sh /utils/check-minifiers-python.sh && \
-    killall inotifywait
-COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
-RUN sh /utils/prune-inotifylist.sh ./python /usage-list.txt
+# TODO: Reenable
+# RUN touch /usage-list.txt && \
+#     inotifywait --daemon --recursive --event access /app/python --outfile /usage-list.txt --format '%w%f' && \
+#     chronic sh /utils/check-minifiers-python.sh && \
+#     killall inotifywait
+# COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
+# RUN sh /utils/prune-inotifylist.sh ./python /usage-list.txt
 
 FROM debian:12.5-slim AS minifiers-python-final
 WORKDIR /app
