@@ -1,6 +1,6 @@
-# Universal minifier
+# Unnecessary minifier
 
-> Universal minifier for all file types
+> Unnecessary minifier for text files
 
 <details>
 <summary>Table of contents</summary>
