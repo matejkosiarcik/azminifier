@@ -59,4 +59,4 @@ jobs:
           docker_layer_caching: true
       - run:
           name: Docker build
-          command: docker build . --tag matejkosiarcik/universal-minifier:dev --progress plain
+          command: docker build . --tag matejkosiarcik/unnecessary-minifier:dev --progress plain

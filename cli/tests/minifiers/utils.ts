@@ -7,7 +7,7 @@ import { setLogLevel } from '../../src/utils/log.ts';
 
 export async function setupTest(): Promise<[string, string]> {
     const currDir = process.cwd();
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'universal-minifier-tests-'));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'unnecessary-minifier-tests-'));
     process.chdir(tmpDir);
     setLogLevel('none');
     return [currDir, tmpDir];

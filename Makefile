@@ -61,12 +61,12 @@ clean:
 
 .PHONY: docker-build
 docker-build:
-	time docker build . --tag matejkosiarcik/universal-minifier:dev
+	time docker build . --tag matejkosiarcik/unnecessary-minifier:dev
 
 .PHONY: docker-multibuild
 docker-multibuild:
 	printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n' 386 amd64 arm/v5 arm/v7 arm64/v8 ppc64le s390x | \
 		while read -r arch; do \
 			printf 'Building for linux/%s:\n' "$$arch" && \
-			time docker build . --tag "matejkosiarcik/universal-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
+			time docker build . --tag "matejkosiarcik/unnecessary-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
 		true; done
