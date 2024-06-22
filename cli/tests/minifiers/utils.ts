@@ -1,7 +1,7 @@
-import assert from 'node:assert';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { expect } from '@playwright/test';
 import { minifyFile } from '../../src/minifiers.ts';
 import { setLogLevel } from '../../src/utils/log.ts';
 
@@ -29,9 +29,9 @@ export async function performSimpleTest(options: {
 
     await minifyFile(filename, options.minifyOptions);
     const minifiedContent = await fs.readFile(filename, 'utf8');
-    assert.strictEqual(minifiedContent, options.output, 'File should be minified as expected');
+    expect(minifiedContent, 'File should be minified as expected').toEqual(options.output);
 
     await minifyFile(filename, options.minifyOptions);
     const minifiedContent2 = await fs.readFile(filename, 'utf8');
-    assert.strictEqual(minifiedContent2, options.output, 'File should be minified as expected again');
+    expect(minifiedContent2, 'File should be minified as expected again').toEqual(options.output);
 }
