@@ -1,4 +1,4 @@
-import { test, describe } from 'node:test';
+import { test } from '@playwright/test';
 import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
 async function performTest(input: string, output: string, variant?: 'bash' | 'sh' | 'zsh' | ('bash' | 'sh' | 'zsh')[] | undefined) {
@@ -16,15 +16,15 @@ async function performTest(input: string, output: string, variant?: 'bash' | 'sh
     }
 }
 
-describe('Minify Bash', function () {
+test.describe('Minify Bash', () => {
     let tmpDir: string;
     let currDir: string;
 
-    test.beforeEach(async function () {
+    test.beforeEach(async () => {
         [currDir, tmpDir] = await setupTest();
     });
 
-    test.afterEach(async function () {
+    test.afterEach(async () => {
         await teardownTest(currDir, tmpDir);
     });
 

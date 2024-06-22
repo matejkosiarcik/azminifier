@@ -1,4 +1,4 @@
-import { test, describe } from 'node:test';
+import { test } from '@playwright/test';
 import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
 async function performTest(input: string, output: string) {
@@ -15,15 +15,15 @@ async function performTest(input: string, output: string) {
 const yaml11VersionPrefix = '%YAML 1.1\n---\n';
 const yaml12VersionPrefix = '%YAML 1.2\n---\n';
 
-describe('Minify YAML', function () {
+test.describe('Minify YAML', () => {
     let tmpDir: string;
     let currDir: string;
 
-    test.beforeEach(async function () {
+    test.beforeEach(async () => {
         [currDir, tmpDir] = await setupTest();
     });
 
-    test.afterEach(async function () {
+    test.afterEach(async () => {
         await teardownTest(currDir, tmpDir);
     });
 
@@ -100,7 +100,7 @@ describe('Minify YAML', function () {
             await performTest(`${yaml11VersionPrefix}${variant.input} `, `${yaml11VersionPrefix}${variant.output}`);
         });
 
-        test(`Test minifying scalars - ${test.name} - YAML 1.2`, async () => {
+        test(`Test minifying scalars - ${variant.name} - YAML 1.2`, async () => {
             await performTest(`${yaml12VersionPrefix}${variant.input} `, `${yaml12VersionPrefix}${variant.output}`);
         });
     }

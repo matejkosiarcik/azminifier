@@ -1,4 +1,4 @@
-import { test, describe } from 'node:test';
+import { test } from '@playwright/test';
 import { performSimpleTest, setupTest, teardownTest } from './utils.ts';
 
 async function performTest(input: string, output: string) {
@@ -12,15 +12,15 @@ async function performTest(input: string, output: string) {
     });
 }
 
-describe('Minify JavaScript', function () {
+test.describe('Minify JavaScript', () => {
     let tmpDir: string;
     let currDir: string;
 
-    test.beforeEach(async function () {
+    test.beforeEach(async () => {
         [currDir, tmpDir] = await setupTest();
     });
 
-    test.afterEach(async function () {
+    test.afterEach(async () => {
         await teardownTest(currDir, tmpDir);
     });
 

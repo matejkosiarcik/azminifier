@@ -20,5 +20,8 @@ node_modules/
 /dist/
 /minifiers/js/dist/
 
+# test artifacts
+test-results/
+
 # misc
 .env
