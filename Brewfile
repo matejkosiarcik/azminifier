@@ -8,6 +8,8 @@ brew "make"
 
 # Minifiers
 brew "jq"
+brew "bash"
+brew "zsh"
 
 # Others
 brew "libxml2"
