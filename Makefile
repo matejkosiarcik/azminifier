@@ -23,7 +23,7 @@ bootstrap:
 	true ; done
 
 	# Python
-	printf '%s\n' minifiers | while read -r dir; do \
+	printf 'minifiers' | tr ' ' '\n' | while read -r dir; do \
 		cd "$(PROJECT_DIR)/$$dir" && \
 		PIP_DISABLE_PIP_VERSION_CHECK=1 \
 			python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade && \
@@ -42,6 +42,14 @@ bootstrap:
 	# 	PYTHONDONTWRITEBYTECODE=1 \
 	# 		gitman install --quiet --force && \
 	# true ; done
+
+	printf 'node-build nodenv nodenv-installer nvm-installer' | tr ' ' '\n' | while read -r dir; do \
+		cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir" && \
+		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
+		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
+		PYTHONDONTWRITEBYTECODE=1 \
+			gitman install --quiet --force && \
+	true ; done
 
 .PHONY: test
 test:
@@ -66,7 +74,7 @@ docker-build:
 .PHONY: docker-multibuild
 docker-multibuild:
 	set -e && \
-	printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n' 386 amd64 arm/v5 arm/v7 arm64/v8 ppc64le s390x | \
+	printf '386 amd64 arm/v5 arm/v6 arm/v7 arm64/v8 ppc64le s390x' | tr ' ' '\n' | \
 		while read -r arch; do \
 			printf 'Building for linux/%s:\n' "$$arch" && \
 			time docker build . --tag "matejkosiarcik/unnecessary-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
