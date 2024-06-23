@@ -18,7 +18,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY cli/package.json cli/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
+    NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --no-fund --loglevel=error && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress
 COPY cli/tsconfig.json ./
 COPY cli/rollup.config.js ./
@@ -69,7 +69,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY minifiers/package.json minifiers/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
-    NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --quiet && \
+    NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --no-fund --loglevel=error && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
 

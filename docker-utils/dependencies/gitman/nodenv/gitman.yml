@@ -1,0 +1,28 @@
+location: gitman/
+sources:
+  - repo: https://github.com/nodenv/nodenv.git
+    name: nodenv
+    rev: main
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
+sources_locked:
+  - repo: https://github.com/nodenv/nodenv.git
+    name: nodenv
+    rev: a0089384b7c4e8fba66ebb90dad255311e49f44e
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
+default_group: ""
+groups:
+  -

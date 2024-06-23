@@ -1,0 +1,28 @@
+location: gitman/
+sources:
+  - repo: https://github.com/nodenv/nodenv-installer.git
+    name: nodenv-installer
+    rev: main
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
+sources_locked:
+  - repo: https://github.com/nodenv/nodenv-installer.git
+    name: nodenv-installer
+    rev: 2eea3742f737ff5a4fab1fdf6fb9a28bce888d5a
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
+default_group: ""
+groups:
+  -
