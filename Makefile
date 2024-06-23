@@ -18,7 +18,7 @@ all: clean bootstrap build test docker-build docker-multibuild
 .PHONY: bootstrap
 bootstrap:
 	# NodeJS
-	printf '%s\n%s\n' cli minifiers | while read -r dir; do \
+	printf 'cli minifiers ' | tr ' ' '\n' | while read -r dir; do \
 		npm ci --no-save --no-progress --no-audit --quiet --prefix "$$dir" && \
 	true ; done
 
