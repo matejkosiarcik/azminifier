@@ -19,7 +19,7 @@ all: clean bootstrap build test docker-build docker-multibuild
 bootstrap:
 	# NodeJS
 	printf 'cli minifiers ' | tr ' ' '\n' | while read -r dir; do \
-		npm ci --no-save --no-progress --no-audit --quiet --prefix "$$dir" && \
+		npm ci --no-save --no-progress --no-audit --no-fund --loglevel=error --prefix "$$dir" && \
 	true ; done
 
 	# Python
