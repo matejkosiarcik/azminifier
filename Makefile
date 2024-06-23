@@ -64,8 +64,12 @@ clean:
 	rm -rf \
 		"$(PROJECT_DIR)/cli/dist" \
 		"$(PROJECT_DIR)/cli/node_modules" \
+		"$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
+		"$(PROJECT_DIR)/docker-utils/dependencies/gitman/venv" \
+		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/python" \
+		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/venv" \
 		"$(PROJECT_DIR)/minifiers/node_modules" \
-		"$(PROJECT_DIR)/minifiers/python" \
+		"$(PROJECT_DIR)/minifiers/python"
 
 .PHONY: docker-build
 docker-build:
