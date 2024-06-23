@@ -23,7 +23,7 @@ bootstrap:
 	true ; done
 
 	# Python
-	printf 'minifiers' | tr ' ' '\n' | while read -r dir; do \
+	printf 'minifiers ' | tr ' ' '\n' | while read -r dir; do \
 		cd "$(PROJECT_DIR)/$$dir" && \
 		PIP_DISABLE_PIP_VERSION_CHECK=1 \
 			python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade && \
@@ -34,8 +34,8 @@ bootstrap:
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
 		python3 -m pip install --requirement requirements.txt --target "$$PWD/python" --quiet --upgrade
 
-	# Gitman repositories
-	# printf '%s\n' <empty> | while read -r dir; do \
+	# Gitman minifiers
+	# printf ' '  | while read -r dir; do \
 	# 	cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
 	# 	PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
 	# 	PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
@@ -43,7 +43,8 @@ bootstrap:
 	# 		gitman install --quiet --force && \
 	# true ; done
 
-	printf 'node-build nodenv nodenv-installer nvm-installer' | tr ' ' '\n' | while read -r dir; do \
+	# Gitman build utils
+	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
 		cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir" && \
 		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
 		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
@@ -70,6 +71,10 @@ clean:
 		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/venv" \
 		"$(PROJECT_DIR)/minifiers/node_modules" \
 		"$(PROJECT_DIR)/minifiers/python"
+
+	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
+		rm -rf "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir/gitman" && \
+	true ; done
 
 .PHONY: docker-build
 docker-build:
