@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { customExeca } from '../utils/utils.ts';
+import { execa, getExecaOutput } from '../utils/utils.ts';
 import { paths } from '../utils/constants.ts';
 
 function getShebang(fileContent: string): string | undefined {
@@ -71,13 +71,13 @@ export async function minifyShellCustom(shellFile: string) {
     const executable = mode === 'sh' ? 'bash' : mode;
     const scriptFilePath = path.join(paths.minifierDirs.shell, `minify-${mode}.${mode === 'zsh' ? 'zsh-mask': 'sh'}`);
 
-    const minifiedFileCommand = await customExeca([executable, scriptFilePath, shellFile]);
+    const minifiedFileCommand = await execa([executable, scriptFilePath, shellFile]);
 
     if (minifiedFileCommand.exitCode !== 0) {
         throw new Error(`Command ${minifiedFileCommand.escapedCommand} failed with ${minifiedFileCommand.exitCode}:\n${minifiedFileCommand.all}`);
     }
 
-    const minifiedFileContent = postProcessFile(minifiedFileCommand.stdout, executable);
+    const minifiedFileContent = postProcessFile(getExecaOutput(minifiedFileCommand), executable);
 
     let output = '';
     if (shebang) {

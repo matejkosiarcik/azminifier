@@ -1,16 +1,16 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import * as url from 'node:url';
-import { customExeca, formatBytes } from './utils/utils.ts';
+import { execa, formatBytes } from './utils/utils.ts';
+import { ExecaError, Result as ExecaResult } from 'execa';
 import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
-import { ExecaReturnValue } from '@esm2cjs/execa';
 import { minifyShellCustom } from './custom-minifiers/shell.ts';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
 
-function getStatusForCommand(command: ExecaReturnValue<string>): MinifierReturnStatus {
+function getStatusForCommand(command: ExecaError | ExecaResult): MinifierReturnStatus {
     const results: MinifierReturnStatus = {
         status: command.exitCode === 0,
         message: '',
@@ -116,7 +116,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
         default: ['--collapse-whitespace-in-texts'],
         brute: ['--trim-whitespace-from-texts'],
     }[level];
-    const command = await customExeca(['minify-xml', file, '--in-place', ...extraArgs], {
+    const command = await execa(['minify-xml', file, '--in-place', ...extraArgs], {
         env: {
             PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         },
@@ -132,7 +132,7 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
         brute: ['--nonlatin'],
     }[level];
 
-    const command = await customExeca(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
+    const command = await execa(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
         env: {
             PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
             PYTHONPATH: path.dirname(binPaths.python),
@@ -151,7 +151,7 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
 }
 
 async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
-    const command = await customExeca(['terser', '--no-rename', file, '--output', file], {
+    const command = await execa(['terser', '--no-rename', file, '--output', file], {
         env: {
             PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         }
