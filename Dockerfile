@@ -9,6 +9,8 @@
 
 ### Reusable components ###
 
+# TODO: Remove unused stages after finalising NodeJS installation
+
 # Gitman #
 FROM --platform=$BUILDPLATFORM debian:12.5-slim AS gitman
 WORKDIR /app
@@ -18,9 +20,27 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --requirement requirements.txt --target python --quiet
-ENV PATH="/app/python/bin:$PATH" \
-    PYTHONPATH=/app/python
+    python3 -m pip install --requirement requirements.txt --target python-install --quiet
+ENV PATH="/app/python-install/bin:$PATH" \
+    PYTHONPATH=/app/python-install
+
+FROM --platform=$BUILDPLATFORM gitman-base AS nodenv-installer--gitman
+WORKDIR /app
+COPY docker-utils/dependencies/gitman/nodenv-installer/gitman.yml ./
+RUN --mount=type=cache,target=/root/.gitcache \
+    gitman install --quiet
+
+FROM --platform=$BUILDPLATFORM gitman-base AS nodenv--gitman
+WORKDIR /app
+COPY docker-utils/dependencies/gitman/nodenv/gitman.yml ./
+RUN --mount=type=cache,target=/root/.gitcache \
+    gitman install --quiet
+
+FROM --platform=$BUILDPLATFORM gitman-base AS node-build--gitman
+WORKDIR /app
+COPY docker-utils/dependencies/gitman/node-build/gitman.yml ./
+RUN --mount=type=cache,target=/root/.gitcache \
+    gitman install --quiet
 
 ### Main CLI ###
 
