@@ -15,6 +15,7 @@ Package Control.*
 # dependencies
 Brewfile.lock.json
 node_modules/
+venv/
 
 # build artifacts
 /dist/
@@ -25,3 +26,8 @@ test-results/
 
 # misc
 .env
+*.bak
+
+# NodeJS archives
+node-*.tar.gz
+node-*/
