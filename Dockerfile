@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=/root/.gitcache \
 
 ### Main CLI ###
 
-FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS cli-build
+FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS cli--build
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -63,16 +63,16 @@ RUN npm run --silent build && \
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
 
-FROM debian:12.5-slim AS cli-final
+FROM debian:12.5-slim AS cli--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs npm \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=cli-build /app/node_modules ./node_modules
-COPY --from=cli-build /app/package.json ./package.json
-COPY --from=cli-build /app/dist/ ./dist/
+COPY --from=cli--build /app/node_modules ./node_modules
+COPY --from=cli--build /app/package.json ./package.json
+COPY --from=cli--build /app/dist/ ./dist/
 COPY docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
 RUN chronic sh /utils/check-minifiers-custom.sh
 
@@ -80,7 +80,7 @@ RUN chronic sh /utils/check-minifiers-custom.sh
 
 # NodeJS #
 
-FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS minifiers-nodejs-build1
+FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS minifiers-nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -93,15 +93,15 @@ RUN --mount=type=cache,target=/root/.npm \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
 
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-nodejs-build2
+FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-nodejs--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-nodejs-build1 /app/node_modules/ ./node_modules/
-COPY --from=minifiers-nodejs-build1 /app/package.json ./package.json
+COPY --from=minifiers-nodejs--build1 /app/node_modules/ ./node_modules/
+COPY --from=minifiers-nodejs--build1 /app/package.json ./package.json
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 ENV PATH="/app/node_modules/.bin:$PATH"
 # TODO: Reenable
@@ -119,15 +119,15 @@ RUN apt-get update -qq && \
         moreutils nodejs \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-nodejs-build2 /app/node_modules ./node_modules/
-COPY --from=minifiers-nodejs-build2 /app/package.json ./package.json
+COPY --from=minifiers-nodejs--build2 /app/node_modules ./node_modules/
+COPY --from=minifiers-nodejs--build2 /app/package.json ./package.json
 COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 ENV PATH="/app/node_modules/.bin:$PATH"
 RUN chronic sh /utils/check-minifiers-nodejs.sh
 
 # Python #
 
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-python-build1
+FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-python--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -140,14 +140,14 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     find /app/python -type f -iname '*.py[co]' -delete && \
     find /app/python -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-python-build2
+FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-python--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils python3 inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python-build1 /app/python/ ./python/
+COPY --from=minifiers-python--build1 /app/python/ ./python/
 COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
 ENV PATH="/app/python/bin:$PATH" \
     PYTHONPATH=/app/python \
@@ -160,14 +160,14 @@ ENV PATH="/app/python/bin:$PATH" \
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./python /usage-list.txt
 
-FROM debian:12.5-slim AS minifiers-python-final
+FROM debian:12.5-slim AS minifiers-python--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python-build2 /app/python ./python/
+COPY --from=minifiers-python--build2 /app/python ./python/
 COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
 ENV PATH="/app/python/bin:$PATH" \
     PYTHONPATH=/app/python \
@@ -179,7 +179,7 @@ RUN chronic sh /utils/check-minifiers-python.sh
 # Mainly the apt install scripts should be the same
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
-FROM debian:12.5-slim AS pre-final
+FROM debian:12.5-slim AS prefinal
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -196,10 +196,10 @@ COPY docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 WORKDIR /app
 COPY VERSION.txt ./
-COPY --from=cli-final /app/ ./
+COPY --from=cli--final /app/ ./
 WORKDIR /app/minifiers
 COPY --from=minifiers-nodejs-final /app/ ./
-COPY --from=minifiers-python-final /app/ ./
+COPY --from=minifiers-python--final /app/ ./
 
 ### Final stage ###
 
@@ -217,7 +217,7 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' 
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify && \
     useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
-COPY --from=pre-final /app/ /app/
+COPY --from=prefinal /app/ /app/
 ENV NODE_OPTIONS=--dns-result-order=ipv4first \
     PYTHONDONTWRITEBYTECODE=1
 USER uniminify
