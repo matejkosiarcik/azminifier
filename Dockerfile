@@ -24,19 +24,19 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 ENV PATH="/app/python-install/bin:$PATH" \
     PYTHONPATH=/app/python-install
 
-FROM --platform=$BUILDPLATFORM gitman-base AS nodenv-installer--gitman
+FROM --platform=$BUILDPLATFORM gitman AS nodenv-installer--gitman
 WORKDIR /app
 COPY docker-utils/dependencies/gitman/nodenv-installer/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
     gitman install --quiet
 
-FROM --platform=$BUILDPLATFORM gitman-base AS nodenv--gitman
+FROM --platform=$BUILDPLATFORM gitman AS nodenv--gitman
 WORKDIR /app
 COPY docker-utils/dependencies/gitman/nodenv/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
     gitman install --quiet
 
-FROM --platform=$BUILDPLATFORM gitman-base AS node-build--gitman
+FROM --platform=$BUILDPLATFORM gitman AS node-build--gitman
 WORKDIR /app
 COPY docker-utils/dependencies/gitman/node-build/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
