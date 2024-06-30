@@ -7,6 +7,21 @@
 # hadolint global ignore=DL3042
 # ^^^ Allow pip's cache, because we use it for cache mount
 
+### Reusable components ###
+
+# Gitman #
+FROM --platform=$BUILDPLATFORM debian:12.5-slim AS gitman
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        python3 python3-pip git >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker-utils/dependencies/gitman/requirements.txt ./
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m pip install --requirement requirements.txt --target python --quiet
+ENV PATH="/app/python/bin:$PATH" \
+    PYTHONPATH=/app/python
+
 ### Main CLI ###
 
 FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS cli-build
@@ -41,24 +56,9 @@ COPY --from=cli-build /app/dist/ ./dist/
 COPY docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
 RUN chronic sh /utils/check-minifiers-custom.sh
 
-### Reusable components ###
-
-# Gitman #
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS gitman-reusable
-WORKDIR /app
-RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        python3 python3-pip git >/dev/null && \
-    rm -rf /var/lib/apt/lists/*
-COPY docker-utils/dependencies/gitman/requirements.txt ./
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --requirement requirements.txt --target python --quiet
-ENV PATH="/app/python/bin:$PATH" \
-    PYTHONPATH=/app/python
-
 ### 3rd party minifiers ###
 
-# NodeJS/NPM #
+# NodeJS #
 
 FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS minifiers-nodejs-build1
 WORKDIR /app
