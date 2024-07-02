@@ -12,7 +12,7 @@
 # TODO: Remove unused stages after finalising NodeJS installation
 
 # Gitman #
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS gitman
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -63,7 +63,7 @@ RUN npm run --silent build && \
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
 
-FROM debian:12.5-slim AS cli--final
+FROM debian:12.6-slim AS cli--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -93,7 +93,7 @@ RUN --mount=type=cache,target=/root/.npm \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
 
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-nodejs--build2
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS minifiers-nodejs--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -112,7 +112,7 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
-FROM debian:12.5-slim AS minifiers-nodejs-final
+FROM debian:12.6-slim AS minifiers-nodejs-final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -127,7 +127,7 @@ RUN chronic sh /utils/check-minifiers-nodejs.sh
 
 # Python #
 
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-python--build1
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS minifiers-python--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -140,7 +140,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     find /app/python -type f -iname '*.py[co]' -delete && \
     find /app/python -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM debian:12.5-slim AS minifiers-python--build2
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS minifiers-python--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -160,7 +160,7 @@ ENV PATH="/app/python/bin:$PATH" \
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./python /usage-list.txt
 
-FROM debian:12.5-slim AS minifiers-python--final
+FROM debian:12.6-slim AS minifiers-python--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -179,7 +179,7 @@ RUN chronic sh /utils/check-minifiers-python.sh
 # Mainly the apt install scripts should be the same
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
-FROM debian:12.5-slim AS prefinal
+FROM debian:12.6-slim AS prefinal
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -203,7 +203,7 @@ COPY --from=minifiers-python--final /app/ ./
 
 ### Final stage ###
 
-FROM debian:12.5-slim
+FROM debian:12.6-slim
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
