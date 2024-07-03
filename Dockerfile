@@ -211,7 +211,7 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' 
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         nodejs python3 \
         >/dev/null && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/* /var/log/apt /var/cache/apt && \
     find /usr/share/bug /usr/share/doc /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
         if ! grep -- "$file" </filelist.txt >/dev/null; then \
             rm -f "$file" && \
