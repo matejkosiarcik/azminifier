@@ -180,18 +180,11 @@ RUN chronic sh /utils/check-minifiers-python.sh
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
 FROM debian:12.6-slim AS prefinal
-RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/filelist.txt 2>/dev/null && \
-    apt-get update -qq && \
+RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    find /usr/share/bug /usr/share/doc /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
-        if ! grep -- "$file" </filelist.txt >/dev/null; then \
-            rm -f "$file" && \
-        true; fi && \
-    true; done && \
-    rm -f /filelist.txt && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify
 COPY docker-utils/sanity-checks/check-system.sh /utils/
