@@ -112,7 +112,7 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
-FROM debian:12.6-slim AS minifiers-nodejs-final
+FROM debian:12.6-slim AS minifiers-nodejs--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -200,7 +200,7 @@ WORKDIR /app
 COPY VERSION.txt ./
 COPY --from=cli--final /app/ ./
 WORKDIR /app/minifiers
-COPY --from=minifiers-nodejs-final /app/ ./
+COPY --from=minifiers-nodejs--final /app/ ./
 COPY --from=minifiers-python--final /app/ ./
 
 ### Final stage ###
