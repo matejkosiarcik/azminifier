@@ -207,12 +207,14 @@ FROM debian:12.6-slim
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq nodejs python3 \
+        nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
-        if ! grep -- "$file" </before.txt >/dev/null; then rm -f "$file"; fi \
-    done && \
+    find /usr/share/bug /usr/share/doc /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
+        if ! grep -- "$file" </before.txt >/dev/null; then \
+            rm -f "$file" && \
+        true; fi && \
+    true; done && \
     rm -f /before.txt && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify && \
