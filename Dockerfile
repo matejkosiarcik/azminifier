@@ -186,9 +186,11 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' 
         jq moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
-        if ! grep -- "$file" </filelist.txt >/dev/null; then rm -f "$file"; fi \
-    done && \
+    find /usr/share/bug /usr/share/doc /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
+        if ! grep -- "$file" </filelist.txt >/dev/null; then \
+            rm -f "$file" && \
+        true; fi && \
+    true; done && \
     rm -f /filelist.txt && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify
