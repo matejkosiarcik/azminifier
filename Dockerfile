@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=/root/.gitcache \
 
 ### Main CLI ###
 
-FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS cli--build
+FROM --platform=$BUILDPLATFORM node:22.4.0-slim AS cli--build
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -80,7 +80,7 @@ RUN chronic sh /utils/check-minifiers-custom.sh
 
 # NodeJS #
 
-FROM --platform=$BUILDPLATFORM node:22.3.0-slim AS minifiers-nodejs--build1
+FROM --platform=$BUILDPLATFORM node:22.4.0-slim AS minifiers-nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
