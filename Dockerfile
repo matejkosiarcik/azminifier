@@ -199,7 +199,7 @@ COPY --from=minifiers-python--final /app/ ./
 ### Final stage ###
 
 FROM debian:12.6-slim
-RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/filelist.txt 2>/dev/null && \
+RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' >/filelist.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         nodejs python3 \
