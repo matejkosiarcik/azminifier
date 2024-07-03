@@ -112,7 +112,7 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
-FROM debian:12.6-slim AS minifiers-nodejs-final
+FROM debian:12.6-slim AS minifiers-nodejs--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -180,16 +180,11 @@ RUN chronic sh /utils/check-minifiers-python.sh
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
 FROM debian:12.6-slim AS prefinal
-RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
-    apt-get update -qq && \
+RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    find /usr/share/bug /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
-        if ! grep -- "$file" </before.txt >/dev/null; then rm -f "$file"; fi \
-    done && \
-    rm -f /before.txt && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify
 COPY docker-utils/sanity-checks/check-system.sh /utils/
@@ -198,24 +193,24 @@ WORKDIR /app
 COPY VERSION.txt ./
 COPY --from=cli--final /app/ ./
 WORKDIR /app/minifiers
-COPY --from=minifiers-nodejs-final /app/ ./
+COPY --from=minifiers-nodejs--final /app/ ./
 COPY --from=minifiers-python--final /app/ ./
 
 ### Final stage ###
 
 FROM debian:12.6-slim
-RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' -not -path '/*.txt' >/before.txt 2>/dev/null && \
+RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' >/filelist.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         nodejs python3 \
         >/dev/null && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/* /var/log/apt /var/cache/apt && \
     find /usr/share/bug /usr/share/doc /var/cache /var/lib/apt /var/log -type f | while read -r file; do \
-        if ! grep -- "$file" </before.txt >/dev/null; then \
+        if ! grep -- "$file" </filelist.txt >/dev/null; then \
             rm -f "$file" && \
         true; fi && \
     true; done && \
-    rm -f /before.txt && \
+    rm -f /filelist.txt && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
     chmod a+x /usr/bin/uniminify && \
     useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
