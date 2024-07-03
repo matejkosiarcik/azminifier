@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v4.1.7
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3.0.0
+        uses: docker/setup-qemu-action@v3.1.0
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3.3.0
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build and Publish
         id: build
-        uses: docker/build-push-action@v6.2.0
+        uses: docker/build-push-action@v6.3.0
         with:
           platforms: ${{ matrix.platform }}
           cache-from: type=gha
