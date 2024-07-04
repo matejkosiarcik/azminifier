@@ -48,23 +48,25 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
 RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        export CONFIGURE_OPTS="--openssl-no-asm" && \
-        export NODE_CONFIGURE_OPTS="--openssl-no-asm" && \
+        printf 'CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
+        printf 'NODE_CONFIGURE_OPTS="--openssl-no-asm\n' >>/app/env.txt && \
     true; else \
-        export CONFIGURE_OPTS="--enable-lto" && \
-        export NODE_CONFIGURE_OPTS="--enable-lto" && \
+        printf 'CONFIGURE_OPTS="--enable-lto\n' >>/app/env.txt && \
+        printf 'NODE_CONFIGURE_OPTS="--enable-lto\n' >>/app/env.txt && \
     true; fi
 ENV CC="gcc-11" \
     CXX="g++-11" \
     NODENV_ROOT=/app/nodenv
 WORKDIR /app/nodenv
-RUN ./src/configure && \
+RUN . /app/env.txt && \
+    ./src/configure && \
     make -C src
 COPY --from=node-build--gitman /app/gitman/node-build/ ./plugins/node-build/
 WORKDIR /app
 ENV PATH="/app/nodenv/bin:$PATH"
 COPY .node-version ./
-RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
+RUN . /app/env.txt && \
+    if [ "$(dpkg --print-architecture)" = i386 ]; then \
         export CFLAGS="-s -march=i686 -mtune=generic -msse2" && \
         export CXXFLAGS="-s -march=i686 -mtune=generic -msse2" && \
     true; else \
