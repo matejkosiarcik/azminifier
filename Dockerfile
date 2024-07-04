@@ -48,11 +48,11 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
 RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        printf 'CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
-        printf 'NODE_CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
+        printf 'export CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
+        printf 'export NODE_CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
     true; else \
-        printf 'CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
-        printf 'NODE_CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
+        printf 'export CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
+        printf 'export NODE_CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
     true; fi
 ENV CC="gcc-11" \
     CXX="g++-11" \
