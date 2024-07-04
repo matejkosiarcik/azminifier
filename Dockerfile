@@ -11,8 +11,6 @@
 
 ### Reusable components ###
 
-# TODO: Remove unused stages after finalising NodeJS installation
-
 # Gitman #
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman--final
 WORKDIR /app
@@ -51,10 +49,10 @@ RUN apt-get update -qq && \
 COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
 RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
         printf 'CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
-        printf 'NODE_CONFIGURE_OPTS="--openssl-no-asm\n' >>/app/env.txt && \
+        printf 'NODE_CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
     true; else \
-        printf 'CONFIGURE_OPTS="--enable-lto\n' >>/app/env.txt && \
-        printf 'NODE_CONFIGURE_OPTS="--enable-lto\n' >>/app/env.txt && \
+        printf 'CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
+        printf 'NODE_CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
     true; fi
 ENV CC="gcc-11" \
     CXX="g++-11" \
