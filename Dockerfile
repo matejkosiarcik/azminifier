@@ -47,11 +47,16 @@ RUN apt-get update -qq && \
         binutils ca-certificates curl g++-11 gcc-11 git libc6 make python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
+RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
+        export CONFIGURE_OPTS="--openssl-no-asm" && \
+        export NODE_CONFIGURE_OPTS="--openssl-no-asm" && \
+    true; else \
+        export CONFIGURE_OPTS="--enable-lto" && \
+        export NODE_CONFIGURE_OPTS="--enable-lto" && \
+    true; fi
 ENV CC="gcc-11" \
-    CONFIGURE_OPTS="--openssl-no-asm --enable-lto" \
     CXX="g++-11" \
-    NODENV_ROOT=/app/nodenv \
-    NODE_CONFIGURE_OPTS="--openssl-no-asm --enable-lto"
+    NODENV_ROOT=/app/nodenv
 WORKDIR /app/nodenv
 RUN ./src/configure && \
     make -C src
@@ -60,8 +65,8 @@ WORKDIR /app
 ENV PATH="/app/nodenv/bin:$PATH"
 COPY .node-version ./
 RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        export CFLAGS="-march=i686 -mtune=generic -msse2 -s" && \
-        export CXXFLAGS="-march=i686 -mtune=generic -msse2 -s" && \
+        export CFLAGS="-s -march=i686 -mtune=generic -msse2" && \
+        export CXXFLAGS="-s -march=i686 -mtune=generic -msse2" && \
     true; else \
         export CFLAGS="-s -flto" && \
         export CXXFLAGS="-s -flto" && \
