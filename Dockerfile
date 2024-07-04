@@ -52,33 +52,34 @@ RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         binutils ca-certificates curl g++-11 gcc-11 git libc6 make python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv-installer--gitman /app/gitman/nodenv-installer/ ./nodenv-installer/
-RUN ./nodenv-installer/bin/nodenv-installer
-COPY --from=nodenv--gitman /app/gitman/nodenv/ ./.nodenv/
+# COPY --from=nodenv-installer--gitman /app/gitman/nodenv-installer/ ./nodenv-installer/
+# RUN ./nodenv-installer/bin/nodenv-installer
+COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
 ENV CC="gcc-11" \
     CONFIGURE_OPTS="--openssl-no-asm --enable-lto" \
     CXX="g++-11" \
-    NODENV_ROOT=/app/.nodenv \
+    NODENV_ROOT=/app/nodenv \
     NODE_CONFIGURE_OPTS="--openssl-no-asm --enable-lto"
-RUN cd .nodenv && \
-    ./src/configure && \
+WORKDIR /app/nodenv
+RUN ./src/configure && \
     make -C src
-COPY --from=node-build--gitman /app/gitman/node-build/ ./.nodenv/plugins/node-build/
-ENV PATH="/app/.nodenv/bin:$PATH"
+COPY --from=node-build--gitman /app/gitman/node-build/ ./plugins/node-build/
+WORKDIR /app
+ENV PATH="/app/nodenv/bin:$PATH"
 COPY .node-version ./
 RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        export CFLAGS="-march=i686 -mtune=generic -msse2 -s -flto" && \
-        export CXXFLAGS="-march=i686 -mtune=generic -msse2 -s -flto" && \
+        export CFLAGS="-march=i686 -mtune=generic -msse2 -s" && \
+        export CXXFLAGS="-march=i686 -mtune=generic -msse2 -s" && \
     true; else \
         export CFLAGS="-s -flto" && \
         export CXXFLAGS="-s -flto" && \
     true; fi && \
     nodenv install "$(cat .node-version)" && \
-    rm -rf "./.nodenv/versions/$(cat .node-version)/share" "./.nodenv/versions/$(cat .node-version)/include" && \
-    strip --strip-all "./.nodenv/versions/$(cat .node-version)/bin/node" && \
-    mv "./.nodenv/versions/$(cat .node-version)" './.nodenv/versions/default'
-# TODO: Optimize and minify /app/.nodenv/versions/default/lib/node_modules
-# TODO: Minify files /app/.nodenv/versions/default/bin/{corepack,npm,npx}
+    rm -rf "./nodenv/versions/$(cat .node-version)/share" "./nodenv/versions/$(cat .node-version)/include" && \
+    strip --strip-all "./nodenv/versions/$(cat .node-version)/bin/node" && \
+    mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default'
+# TODO: Optimize and minify /app/nodenv/versions/default/lib/node_modules
+# TODO: Minify files /app/nodenv/versions/default/bin/{corepack,npm,npx}
 
 FROM debian:12.6-slim AS nodenv--final
 WORKDIR /app
@@ -92,10 +93,10 @@ RUN apt-get update -qq && \
             libatomic1:armhf libc6:armhf libstdc++6:armhf >/dev/null && \
     true; elif [ "$(dpkg --print-architecture)" = armhf ]; then \
         DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-            libatomic1:armhf  >/dev/null && \
+            libatomic1 >/dev/null && \
     true; fi && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--build /app/.nodenv/versions/default/ ./.node/
+COPY --from=nodenv--build /app/nodenv/versions/default/ ./.node/
 ENV PATH="/app/.node/bin:$PATH"
 # Validate installation
 RUN chronic node --version && \
