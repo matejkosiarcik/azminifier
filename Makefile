@@ -44,7 +44,7 @@ bootstrap:
 	# true ; done
 
 	# Gitman build utils
-	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
+	printf 'node-build nodenv ' | tr ' ' '\n' | while read -r dir; do \
 		cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir" && \
 		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python/bin:$$PATH" \
 		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python" \
