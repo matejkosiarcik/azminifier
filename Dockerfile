@@ -11,8 +11,6 @@
 
 ### Reusable components ###
 
-# TODO: Remove unused stages after finalising NodeJS installation
-
 # Gitman #
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman--final
 WORKDIR /app
