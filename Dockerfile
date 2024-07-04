@@ -6,6 +6,8 @@
 
 # hadolint global ignore=DL3042
 # ^^^ Allow pip's cache, because we use it for cache mount
+# hadolint global ignore=SC1091
+# ^^^ False positives for sourcing files into current shell
 
 ### Reusable components ###
 
