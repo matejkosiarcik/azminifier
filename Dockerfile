@@ -20,9 +20,9 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --requirement requirements.txt --target python-install --quiet
-ENV PATH="/app/python-install/bin:$PATH" \
-    PYTHONPATH=/app/python-install
+    python3 -m pip install --requirement requirements.txt --target python-packages --quiet
+ENV PATH="/app/python-packages/bin:$PATH" \
+    PYTHONPATH=/app/python-packages
 
 FROM --platform=$BUILDPLATFORM gitman--final AS nodenv--gitman
 WORKDIR /app
@@ -193,9 +193,9 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY minifiers/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --requirement requirements.txt --target "$PWD/python" --quiet && \
-    find /app/python -type f -iname '*.py[co]' -delete && \
-    find /app/python -type d -iname '__pycache__' -prune -exec rm -rf {} \;
+    python3 -m pip install --requirement requirements.txt --target "$PWD/python-packages" --quiet && \
+    find /app/python-packages -type f -iname '*.py[co]' -delete && \
+    find /app/python-packages -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS minifiers-python--build2
 WORKDIR /app
@@ -204,18 +204,18 @@ RUN apt-get update -qq && \
         jq moreutils python3 inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python--build1 /app/python/ ./python/
+COPY --from=minifiers-python--build1 /app/python-packages/ ./python-packages/
 COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
-ENV PATH="/app/python/bin:$PATH" \
-    PYTHONPATH=/app/python \
+ENV PATH="/app/python-packages/bin:$PATH" \
+    PYTHONPATH=/app/python-packages \
     PYTHONDONTWRITEBYTECODE=1
 # TODO: Reenable
 # RUN touch /usage-list.txt && \
-#     inotifywait --daemon --recursive --event access /app/python --outfile /usage-list.txt --format '%w%f' && \
+#     inotifywait --daemon --recursive --event access /app/python-packages --outfile /usage-list.txt --format '%w%f' && \
 #     chronic sh /utils/check-minifiers-python.sh && \
 #     killall inotifywait
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
-# RUN sh /utils/prune-inotifylist.sh ./python /usage-list.txt
+# RUN sh /utils/prune-inotifylist.sh ./python-packages /usage-list.txt
 
 FROM debian:12.6-slim AS minifiers-python--final
 WORKDIR /app
@@ -224,10 +224,10 @@ RUN apt-get update -qq && \
         jq moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python--build2 /app/python ./python/
+COPY --from=minifiers-python--build2 /app/python-packages ./python-packages/
 COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
-ENV PATH="/app/python/bin:$PATH" \
-    PYTHONPATH=/app/python \
+ENV PATH="/app/python-packages/bin:$PATH" \
+    PYTHONPATH=/app/python-packages \
     PYTHONDONTWRITEBYTECODE=1
 RUN chronic sh /utils/check-minifiers-python.sh
 
