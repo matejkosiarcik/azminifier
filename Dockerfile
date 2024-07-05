@@ -72,18 +72,24 @@ RUN export CFLAGS="-s" && \
     export CXX="g++-11" && \
     export CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS="" && \
+    export NODE_CONFIGURE_OPTS2="--cross-compiling --dest-os=linux" && \
     export NODE_MAKE_OPTS="-j$(nproc --all)" && \
     if [ "$TARGETARCH" = 386 ] || [ "$TARGETARCH" = amd64 ]; then \
-        export CFLAGS="$CFLAGS -mtune=generic" && \
-        export CXXFLAGS="$CXXFLAGS -mtune=generic" && \
+        export CFLAGS2="$CFLAGS -mtune=generic" && \
+        export CXXFLAGS2="$CXXFLAGS -mtune=generic" && \
         if [ "$TARGETARCH" = 386 ]; then \
             export CONFIGURE_OPTS="--openssl-no-asm" && \
             export NODE_CONFIGURE_OPTS="--openssl-no-asm" && \
-            export CFLAGS="$CFLAGS -march=i686 -msse2" && \
-            export CXXFLAGS="$CXXFLAGS -march=i686 -msse2" && \
+            export CFLAGS2="$CFLAGS -march=i686 -msse2" && \
+            export CXXFLAGS2="$CXXFLAGS -march=i686 -msse2" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=x86" && \
         true; elif [ "$TARGETARCH" = amd64 ]; then \
-            export CFLAGS="$CFLAGS -march=x86-64" && \
-            export CXXFLAGS="$CXXFLAGS -march=x86-64" && \
+            export CFLAGS2="$CFLAGS -march=x86-64" && \
+            export CXXFLAGS2="$CXXFLAGS -march=x86-64" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=x86_64" && \
+        true; else \
+            printf 'Unsupported architecture %s/%s\n' "$TARGETARCH" "$TARGETVARIANT" && \
+            exit 1 && \
         true; fi && \
     true; elif [ "$TARGETARCH" = arm ] || [ "$TARGETARCH" = arm32 ] || [ "$TARGETARCH" = arm64 ]; then \
         export CFLAGS2="$CFLAGS -mtune=generic-arch" && \
@@ -91,25 +97,41 @@ RUN export CFLAGS="-s" && \
         if [ "$TARGETVARIANT" = v5 ] || ( [ "$TARGETARCH" = arm ] && [ "$TARGETVARIANT" = '' ] ) || ( [ "$TARGETARCH" = arm32 ] && [ "$TARGETVARIANT" = '' ] ); then \
             export CFLAGS2="$CFLAGS -march=armv5t -mfloat-abi=soft" && \
             export CXXFLAGS2="$CXXFLAGS -march=armv5t -mfloat-abi=soft" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=arm --with-arm-float-abi=soft" && \
         true; elif [ "$TARGETVARIANT" = v6 ]; then \
             # TODO: If running the produced executable has problems
             # First try "-march=armv6z+fp -mfloat-abi=softfp"
             # Alternatively try out "-march=armv6z+nofp -mfloat-abi=soft"
             export CFLAGS2="$CFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
             export CXXFLAGS2="$CXXFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=arm --with-arm-float-abi=hard --with-arm-fpu=vfp" && \
         true; elif [ "$TARGETVARIANT" = v7 ]; then \
             export CFLAGS2="$CFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
             export CXXFLAGS2="$CXXFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=arm --with-arm-float-abi=hard --with-arm-fpu=vfpv3" && \
         true; elif [ "$TARGETVARIANT" = v8 ] || ( [ "$TARGETARCH" = arm64 ] && [ "$TARGETVARIANT" = '' ] ); then \
             export CFLAGS2="$CFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
             export CXXFLAGS2="$CXXFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=arm64 --with-arm-float-abi=hard --with-arm-fpu=neon" && \
         true; elif [ "$TARGETVARIANT" = v9 ]; then \
             export CFLAGS2="$CFLAGS -march=armv9-a -mfloat-abi=hard" && \
             export CXXFLAGS2="$CXXFLAGS -march=armv9-a -mfloat-abi=hard" && \
+            export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=arm64 --with-arm-float-abi=hard --with-arm-fpu=neon" && \
         true; else \
             printf 'Unsupported architecture %s/%s\n' "$TARGETARCH" "$TARGETVARIANT" && \
             exit 1 && \
         true; fi && \
+    true; elif [ "$TARGETARCH" = ppc64le ]; then \
+        export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=ppc64" && \
+    true; elif [ "$TARGETARCH" = mips64le ]; then \
+        export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=mips64el" && \
+    true; elif [ "$TARGETARCH" = s390x ]; then \
+        export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=s390x" && \
+    true; elif [ "$TARGETARCH" = riscv64 ]; then \
+        export NODE_CONFIGURE_OPTS2="$NODE_CONFIGURE_OPTS2 --dest-cpu=riscv64" && \
+    true; else \
+        printf 'Unsupported architecture %s/%s\n' "$TARGETARCH" "$TARGETVARIANT" && \
+        exit 1 && \
     true; fi && \
     printf 'export CC="%s"\n' "$CC" >>build-env.sh && \
     printf 'export CXX="%s"\n' "$CXX" >>build-env.sh && \
@@ -117,11 +139,17 @@ RUN export CFLAGS="-s" && \
     printf 'export CXXFLAGS="%s"\n' "$CXXFLAGS" >>build-env.sh && \
     printf 'export CONFIGURE_OPTS="%s"\n' "$CONFIGURE_OPTS" >>build-env.sh && \
     printf 'export NODE_CONFIGURE_OPTS="%s"\n' "$NODE_CONFIGURE_OPTS" >>build-env.sh && \
-    printf 'export NODE_MAKE_OPTS="%s"\n' "$NODE_MAKE_OPTS"  >>build-env.sh
+    printf 'export NODE_MAKE_OPTS="%s"\n' "$NODE_MAKE_OPTS" >>build-env.sh
 COPY .node-version ./
 RUN printf 'export _NODE_VERSION="%s"\n' "$(cat .node-version)" >>build-env.sh
 COPY --from=nodenv--build1 /app/ ./
 
+# TODO: Test optimization options from https://www.reddit.com/r/cpp/comments/d74hfi/additional_optimization_options_in_gcc/
+# -fdevirtualize-at-ltrans
+# -fipa-pta
+# TODO: Maybe try ccache for speedup? https://ccache.dev https://github.com/nodejs/node/blob/main/BUILDING.md#speeding-up-frequent-rebuilds-when-developing
+# export CC="ccache $CC"
+# export CXX="ccache $CXX"
 # TODO: Cross-compile NodeJS in this stage
 # - CONFIGURE_OPTS="--cross-compiling"
 # - NODE_CONFIGURE_OPTS="--cross-compiling"
