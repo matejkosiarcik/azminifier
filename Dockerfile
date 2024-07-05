@@ -11,72 +11,159 @@
 
 ### Reusable components ###
 
-# Gitman #
-FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman--final
+## Gitman ##
+
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman--base
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        python3 python3-pip git >/dev/null && \
+        python3-pip python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target python-packages --quiet
+
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman--final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        ca-certificates git python3 >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=gitman--base /app/ ./
 ENV PATH="/app/python-packages/bin:$PATH" \
     PYTHONPATH=/app/python-packages
+
+## NodeJS ##
 
 FROM --platform=$BUILDPLATFORM gitman--final AS nodenv--gitman
 WORKDIR /app
 COPY docker-utils/dependencies/gitman/nodenv/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
-    gitman install --quiet
+    gitman install --quiet && \
+    find . -type d -name .git -prune -exec rm -rf {} \;
 
 FROM --platform=$BUILDPLATFORM gitman--final AS node-build--gitman
 WORKDIR /app
 COPY docker-utils/dependencies/gitman/node-build/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
-    gitman install --quiet
+    gitman install --quiet && \
+    find . -type d -name .git -prune -exec rm -rf {} \;
+
+# TODO: Run on current architecture
+FROM debian:12.6-slim AS nodenv--build1
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        g++ gcc make >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
+ENV NODENV_ROOT=/app/nodenv
+RUN ./nodenv/src/configure && \
+    make -C ./nodenv/src
+COPY --from=node-build--gitman /app/gitman/node-build/ ./nodenv/plugins/node-build/
+
+# TODO: Setup cross compilation variables
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS nodenv--build2
+ARG TARGETARCH TARGETVARIANT
+WORKDIR /app
+RUN export CFLAGS="-s" && \
+    export CXXFLAGS="-s" && \
+    export CC="gcc" && \
+    export CXX="g++" && \
+    export CONFIGURE_OPTS="" && \
+    export NODE_CONFIGURE_OPTS="" && \
+    if [ "$TARGETARCH" = 386 ] || [ "$TARGETARCH" = amd64 ]; then \
+        export CFLAGS="$CFLAGS -mtune=generic" && \
+        export CXXFLAGS="$CXXFLAGS -mtune=generic" && \
+        if [ "$TARGETARCH" = 386 ]; then \
+            export CONFIGURE_OPTS="--openssl-no-asm" && \
+            export NODE_CONFIGURE_OPTS="--openssl-no-asm" && \
+            export CC="gcc-11" && \
+            export CXX="g++-11" && \
+            export CFLAGS="$CFLAGS -march=i686 -msse2" && \
+            export CXXFLAGS="$CXXFLAGS -march=i686 -msse2" && \
+        true; elif [ "$TARGETARCH" = amd64 ]; then \
+            export CFLAGS="$CFLAGS -march=x86-64" && \
+            export CXXFLAGS="$CXXFLAGS -march=x86-64" && \
+        true; fi && \
+    true; elif [ "$TARGETARCH" = arm ] || [ "$TARGETARCH" = arm32 ] || [ "$TARGETARCH" = arm64 ]; then \
+        export CFLAGS="$CFLAGS -mtune=generic-arch" && \
+        export CXXFLAGS="$CXXFLAGS -mtune=generic-arch" && \
+        if [ "$TARGETVARIANT" = v5 ] || ( [ "$TARGETARCH" = arm ] && [ "$TARGETVARIANT" = '' ] ) || ( [ "$TARGETARCH" = arm32 ] && [ "$TARGETVARIANT" = '' ] ); then \
+            export CFLAGS="$CFLAGS -march=armv5t -mfloat-abi=soft" && \
+            export CXXFLAGS="$CXXFLAGS -march=armv5t -mfloat-abi=soft" && \
+        true; elif [ "$TARGETVARIANT" = v6 ]; then \
+            # TODO: If running the produced executable has problems
+            # First try "-march=armv6z+fp -mfloat-abi=softfp"
+            # Alternatively try out "-march=armv6z+nofp -mfloat-abi=soft"
+            export CFLAGS="$CFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
+            export CXXFLAGS="$CXXFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
+        true; elif [ "$TARGETVARIANT" = v7 ]; then \
+            export CFLAGS="$CFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
+            export CXXFLAGS="$CXXFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
+        true; elif [ "$TARGETVARIANT" = v8 ] || ( [ "$TARGETARCH" = arm64 ] && [ "$TARGETVARIANT" = '' ] ); then \
+            export CFLAGS="$CFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
+            export CXXFLAGS="$CXXFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
+        true; elif [ "$TARGETVARIANT" = v9 ]; then \
+            export CFLAGS="$CFLAGS -march=armv9-a -mfloat-abi=hard" && \
+            export CXXFLAGS="$CXXFLAGS -march=armv9-a -mfloat-abi=hard" && \
+        true; else \
+            printf 'Unsupported architecture %s/%s\n' "$TARGETARCH" "$TARGETVARIANT" && \
+            exit 1 && \
+        true; fi && \
+    true; fi && \
+    printf 'export CC="%s"\n' "$CC" >>build-env.sh && \
+    printf 'export CXX="%s"\n' "$CXX" >>build-env.sh && \
+    printf 'export CFLAGS="%s"\n' "$CFLAGS" >>build-env.sh && \
+    printf 'export CXXFLAGS="%s"\n' "$CXXFLAGS" >>build-env.sh && \
+    printf 'export CONFIGURE_OPTS="%s"\n' "$CONFIGURE_OPTS" >>build-env.sh && \
+    printf 'export NODE_CONFIGURE_OPTS="%s"\n' "$NODE_CONFIGURE_OPTS" >>build-env.sh
+COPY .node-version ./
+RUN printf 'export _NODE_VERSION="%s"\n' "$(cat .node-version)" >>build-env.sh
+COPY --from=nodenv--build1 /app/ ./
 
 # TODO: Cross-compile NodeJS in this stage
-FROM debian:12.6-slim AS nodenv--build
+# - CONFIGURE_OPTS="--cross-compiling"
+# - NODE_CONFIGURE_OPTS="--cross-compiling"
+# TODO: Setup cache downloads directory
+# TODO: Setup cache builds directory
+# TODO: Enable LTO:
+# - CONFIGURE_OPTS="--enable-lto"
+# - NODE_CONFIGURE_OPTS="--enable-lto"
+# - CFLAGS="-flto"
+# - CXXFLAGS="-flto"
+FROM debian:12.6-slim AS nodenv--build3
 WORKDIR /app
 # There is a probably bug with GCC-12, that's why GCC-11 is installed instead
 # See more: https://github.com/nodejs/node/issues/53633
 # TODO: Use default GCC or after this problem is fixed or GCC-13 is available in stable debian
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        binutils ca-certificates curl g++-11 gcc-11 git libc6 make python3 >/dev/null && \
-    rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
-RUN if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        printf 'export CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
-        printf 'export NODE_CONFIGURE_OPTS="--openssl-no-asm"\n' >>/app/env.txt && \
-    true; else \
-        printf 'export CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
-        printf 'export NODE_CONFIGURE_OPTS="--enable-lto"\n' >>/app/env.txt && \
-    true; fi
-ENV CC="gcc-11" \
-    CXX="g++-11" \
-    NODENV_ROOT=/app/nodenv
-WORKDIR /app/nodenv
-RUN . /app/env.txt && \
-    ./src/configure && \
-    make -C src
-COPY --from=node-build--gitman /app/gitman/node-build/ ./plugins/node-build/
-WORKDIR /app
-ENV PATH="/app/nodenv/bin:$PATH"
-COPY .node-version ./
-RUN . /app/env.txt && \
+        binutils ca-certificates curl git libc6 make python3 time >/dev/null && \
     if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        export CFLAGS="-s -march=i686 -mtune=generic -msse2" && \
-        export CXXFLAGS="-s -march=i686 -mtune=generic -msse2" && \
+        DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+            g++-11 gcc-11 >/dev/null && \
     true; else \
-        export CFLAGS="-s -flto" && \
-        export CXXFLAGS="-s -flto" && \
+        DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+            g++ gcc >/dev/null && \
     true; fi && \
-    nodenv install "$(cat .node-version)" && \
+    rm -rf /var/lib/apt/lists/*
+ENV NODENV_ROOT=/app/nodenv \
+    PATH="/app/nodenv/bin:$PATH"
+COPY --from=nodenv--build2 /app/ ./
+RUN --mount=type=cache,target=/app/node-downloads \
+    --mount=type=cache,target=/app/node-builds \
+    export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
+    export NODE_BUILD_BUILD_PATH="/app/node-builds/$(shasum /app/build-env.sh | sed 's~ .*$~~')" && \
+    mkdir -p "$NODE_BUILD_CACHE_PATH" "$NODE_BUILD_BUILD_PATH" && \
+    find "$NODE_BUILD_BUILD_PATH" >build-dir-before.txt && \
+    . /app/build-env.sh && \
+    nodenv install --compile --keep "$(cat .node-version)" && \
+    find "$NODE_BUILD_BUILD_PATH" >build-dir-after.txt && \
     rm -rf "./nodenv/versions/$(cat .node-version)/share" "./nodenv/versions/$(cat .node-version)/include" && \
     strip --strip-all "./nodenv/versions/$(cat .node-version)/bin/node" && \
     mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default'
+
 # TODO: Optimize and minify /app/nodenv/versions/default/lib/node_modules
 # TODO: Minify files /app/nodenv/versions/default/bin/{corepack,npm,npx}
 
@@ -95,11 +182,15 @@ RUN apt-get update -qq && \
             libatomic1 >/dev/null && \
     true; fi && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--build /app/nodenv/versions/default/ ./.node/
+COPY --from=nodenv--build3 /app/nodenv/versions/default/ ./.node/
 ENV PATH="/app/.node/bin:$PATH"
 # Validate installation
 RUN chronic node --version && \
     chronic npm --version
+
+# Python ##
+
+# Ruby ##
 
 ### Main CLI ###
 
