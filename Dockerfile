@@ -72,6 +72,7 @@ RUN export CFLAGS="-s" && \
     export CXX="g++" && \
     export CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS="" && \
+    export NODE_MAKE_OPTS="-j$(nproc --all)" && \
     if [ "$TARGETARCH" = 386 ] || [ "$TARGETARCH" = amd64 ]; then \
         export CFLAGS="$CFLAGS -mtune=generic" && \
         export CXXFLAGS="$CXXFLAGS -mtune=generic" && \
@@ -117,7 +118,8 @@ RUN export CFLAGS="-s" && \
     printf 'export CFLAGS="%s"\n' "$CFLAGS" >>build-env.sh && \
     printf 'export CXXFLAGS="%s"\n' "$CXXFLAGS" >>build-env.sh && \
     printf 'export CONFIGURE_OPTS="%s"\n' "$CONFIGURE_OPTS" >>build-env.sh && \
-    printf 'export NODE_CONFIGURE_OPTS="%s"\n' "$NODE_CONFIGURE_OPTS" >>build-env.sh
+    printf 'export NODE_CONFIGURE_OPTS="%s"\n' "$NODE_CONFIGURE_OPTS" >>build-env.sh && \
+    printf 'export NODE_MAKE_OPTS="%s"\n' "$NODE_MAKE_OPTS"  >>build-env.sh
 COPY .node-version ./
 RUN printf 'export _NODE_VERSION="%s"\n' "$(cat .node-version)" >>build-env.sh
 COPY --from=nodenv--build1 /app/ ./
