@@ -68,8 +68,8 @@ ARG TARGETARCH TARGETVARIANT
 WORKDIR /app
 RUN export CFLAGS="-s" && \
     export CXXFLAGS="-s" && \
-    export CC="gcc" && \
-    export CXX="g++" && \
+    export CC="gcc-11" && \
+    export CXX="g++-11" && \
     export CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS="" && \
     export NODE_MAKE_OPTS="-j$(nproc --all)" && \
@@ -79,8 +79,6 @@ RUN export CFLAGS="-s" && \
         if [ "$TARGETARCH" = 386 ]; then \
             export CONFIGURE_OPTS="--openssl-no-asm" && \
             export NODE_CONFIGURE_OPTS="--openssl-no-asm" && \
-            export CC="gcc-11" && \
-            export CXX="g++-11" && \
             export CFLAGS="$CFLAGS -march=i686 -msse2" && \
             export CXXFLAGS="$CXXFLAGS -march=i686 -msse2" && \
         true; elif [ "$TARGETARCH" = amd64 ]; then \
@@ -141,14 +139,7 @@ WORKDIR /app
 # TODO: Use default GCC or after this problem is fixed or GCC-13 is available in stable debian
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        binutils ca-certificates curl git libc6 make python3 time >/dev/null && \
-    if [ "$(dpkg --print-architecture)" = i386 ]; then \
-        DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-            g++-11 gcc-11 >/dev/null && \
-    true; else \
-        DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-            g++ gcc >/dev/null && \
-    true; fi && \
+        binutils ca-certificates curl g++-11 gcc-11 git libc6 make python3 time >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 ENV NODENV_ROOT=/app/nodenv \
     PATH="/app/nodenv/bin:$PATH"
