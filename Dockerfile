@@ -87,26 +87,26 @@ RUN export CFLAGS="-s" && \
             export CXXFLAGS="$CXXFLAGS -march=x86-64" && \
         true; fi && \
     true; elif [ "$TARGETARCH" = arm ] || [ "$TARGETARCH" = arm32 ] || [ "$TARGETARCH" = arm64 ]; then \
-        export CFLAGS="$CFLAGS -mtune=generic-arch" && \
-        export CXXFLAGS="$CXXFLAGS -mtune=generic-arch" && \
+        export CFLAGS2="$CFLAGS -mtune=generic-arch" && \
+        export CXXFLAGS2="$CXXFLAGS -mtune=generic-arch" && \
         if [ "$TARGETVARIANT" = v5 ] || ( [ "$TARGETARCH" = arm ] && [ "$TARGETVARIANT" = '' ] ) || ( [ "$TARGETARCH" = arm32 ] && [ "$TARGETVARIANT" = '' ] ); then \
-            export CFLAGS="$CFLAGS -march=armv5t -mfloat-abi=soft" && \
-            export CXXFLAGS="$CXXFLAGS -march=armv5t -mfloat-abi=soft" && \
+            export CFLAGS2="$CFLAGS -march=armv5t -mfloat-abi=soft" && \
+            export CXXFLAGS2="$CXXFLAGS -march=armv5t -mfloat-abi=soft" && \
         true; elif [ "$TARGETVARIANT" = v6 ]; then \
             # TODO: If running the produced executable has problems
             # First try "-march=armv6z+fp -mfloat-abi=softfp"
             # Alternatively try out "-march=armv6z+nofp -mfloat-abi=soft"
-            export CFLAGS="$CFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
-            export CXXFLAGS="$CXXFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
+            export CFLAGS2="$CFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
+            export CXXFLAGS2="$CXXFLAGS -march=armv6z+fp -mfloat-abi=hard" && \
         true; elif [ "$TARGETVARIANT" = v7 ]; then \
-            export CFLAGS="$CFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
-            export CXXFLAGS="$CXXFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
+            export CFLAGS2="$CFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
+            export CXXFLAGS2="$CXXFLAGS -march=armv7-a+vfpv4 -mfloat-abi=hard" && \
         true; elif [ "$TARGETVARIANT" = v8 ] || ( [ "$TARGETARCH" = arm64 ] && [ "$TARGETVARIANT" = '' ] ); then \
-            export CFLAGS="$CFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
-            export CXXFLAGS="$CXXFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
+            export CFLAGS2="$CFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
+            export CXXFLAGS2="$CXXFLAGS -march=armv8-a+simd -mfloat-abi=hard" && \
         true; elif [ "$TARGETVARIANT" = v9 ]; then \
-            export CFLAGS="$CFLAGS -march=armv9-a -mfloat-abi=hard" && \
-            export CXXFLAGS="$CXXFLAGS -march=armv9-a -mfloat-abi=hard" && \
+            export CFLAGS2="$CFLAGS -march=armv9-a -mfloat-abi=hard" && \
+            export CXXFLAGS2="$CXXFLAGS -march=armv9-a -mfloat-abi=hard" && \
         true; else \
             printf 'Unsupported architecture %s/%s\n' "$TARGETARCH" "$TARGETVARIANT" && \
             exit 1 && \
