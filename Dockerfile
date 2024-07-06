@@ -184,7 +184,7 @@ RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
     find "$NODE_BUILD_BUILD_PATH" >builds-dir-before.txt && \
     . /app/build-env.sh && \
     printf 'Time 1:\n' >>time.txt && \
-    { time nodenv install --compile --keep --verbose "$(cat .node-version)" 2>&1 } 2>>time.txt && \
+    ( time nodenv install --compile --keep --verbose "$(cat .node-version)" 2>&1 ) 2>>time.txt && \
     find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after.txt && \
     find "$NODE_BUILD_BUILD_PATH" >builds-dir-after.txt && \
     rm -rf "./nodenv/versions/$(cat .node-version)/share" "./nodenv/versions/$(cat .node-version)/include" && \
