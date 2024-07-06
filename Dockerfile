@@ -73,7 +73,8 @@ RUN export CFLAGS="-s" && \
     export CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS2="--cross-compiling --dest-os=linux" && \
-    export NODE_MAKE_OPTS="-j$(nproc --all)" && \
+    export NODE_MAKE_OPTS2="-j$(nproc --all)" && \
+    export MAKE_OPTS2="-j$(nproc --all)" && \
     if [ "$TARGETARCH" = 386 ] || [ "$TARGETARCH" = amd64 ]; then \
         export CFLAGS2="$CFLAGS -mtune=generic" && \
         export CXXFLAGS2="$CXXFLAGS -mtune=generic" && \
@@ -164,23 +165,28 @@ FROM debian:12.6-slim AS nodenv--build3
 WORKDIR /app
 # There is a probably bug with GCC-12, that's why GCC-11 is installed instead
 # See more: https://github.com/nodejs/node/issues/53633
-# TODO: Use default GCC or after this problem is fixed or GCC-13 is available in stable debian
+# TODO: Use default GCC(-12) after this problem is fixed or GCC-13 if it's available in stable debian
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        binutils ca-certificates curl g++-11 gcc-11 git libc6 make python3 time >/dev/null && \
+        binutils ca-certificates curl g++-11 gcc-11 git libc6 make moreutils python3 time >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 ENV NODENV_ROOT=/app/nodenv \
     PATH="/app/nodenv/bin:$PATH"
 COPY --from=nodenv--build2 /app/ ./
-RUN --mount=type=cache,target=/app/node-downloads \
-    --mount=type=cache,target=/app/node-builds \
-    export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
+# TODO: Enable build cache
+# RUN --mount=type=cache,target=/app/node-downloads \
+#     --mount=type=cache,target=/app/node-builds \
+# TODO: Run compilation under "chronic"
+RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
     export NODE_BUILD_BUILD_PATH="/app/node-builds/$(shasum /app/build-env.sh | sed 's~ .*$~~')" && \
     mkdir -p "$NODE_BUILD_CACHE_PATH" "$NODE_BUILD_BUILD_PATH" && \
-    find "$NODE_BUILD_BUILD_PATH" >build-dir-before.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-before.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-before.txt && \
     . /app/build-env.sh && \
-    nodenv install --compile --keep "$(cat .node-version)" && \
-    find "$NODE_BUILD_BUILD_PATH" >build-dir-after.txt && \
+    printf 'Time 1:\n' >>time.txt && \
+    { time nodenv install --compile --keep --verbose "$(cat .node-version)" 2>&1 } 2>>time.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after.txt && \
     rm -rf "./nodenv/versions/$(cat .node-version)/share" "./nodenv/versions/$(cat .node-version)/include" && \
     strip --strip-all "./nodenv/versions/$(cat .node-version)/bin/node" && \
     mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default'
