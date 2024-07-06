@@ -195,15 +195,15 @@ RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
     strip --strip-all './nodenv/versions/default/bin/node' && \
     printf 'Time 2:\n' >>time.txt && \
     ( time chronic nodenv install --compile --keep --verbose "$(cat .node-version)" 2>&1 ) 2>>time.txt && \
-    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after.txt && \
-    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after2.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after2.txt && \
     mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default2' && \
     rm -rf "./nodenv/versions/default2/share" "./nodenv/versions/default2/include" && \
     strip --strip-all './nodenv/versions/default2/bin/node' && \
     printf 'Time 3:\n' >>time.txt && \
     ( time chronic nodenv install --keep --verbose "$(cat .node-version)" 2>&1 ) 2>>time.txt && \
-    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after.txt && \
-    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after3.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after3.txt && \
     mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default3' && \
     rm -rf "./nodenv/versions/default2/share" "./nodenv/versions/default3/include" && \
     strip --strip-all './nodenv/versions/default3/bin/node'
