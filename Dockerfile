@@ -211,7 +211,7 @@ RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
 # TODO: Optimize and minify /app/nodenv/versions/default/lib/node_modules
 # TODO: Minify files /app/nodenv/versions/default/bin/{corepack,npm,npx}
 
-FROM debian:12.6-slim AS nodenv--final
+FROM debian:12.6-slim AS nodejs-build--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -226,7 +226,7 @@ RUN apt-get update -qq && \
             libatomic1 >/dev/null && \
     true; fi && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--build3 /app/nodenv/versions/default/ ./.node/
+COPY --from=nodejs--build3 /app/nodenv/versions/default/ ./.node/
 ENV PATH="/app/.node/bin:$PATH"
 # Validate installation
 RUN chronic node --version && \
