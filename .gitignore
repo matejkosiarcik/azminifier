@@ -5,30 +5,23 @@
 *~
 Thumbs.db
 
-# editors
+# Editor stuff
 .idea/
 .vscode/
 *.sublime-*
 *.vim
 Package Control.*
 
-# dependencies
+# Dependencies
 Brewfile.lock.json
 node_modules/
 python-packages/
 venv/
+git/
 
-# build artifacts
-/dist/
-/minifiers/js/dist/
-
-# test artifacts
+# Test artifacts
 test-results/
 
-# misc
+# Misc
 .env
 *.bak
-
-# NodeJS archives
-node-*.tar.gz
-node-*/

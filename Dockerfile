@@ -33,7 +33,7 @@ COPY --from=gitman--base /app/ ./
 ENV PATH="/app/python-packages/bin:$PATH" \
     PYTHONPATH=/app/python-packages
 
-## NodeJS ##
+## Custom NodeJS ##
 
 FROM --platform=$BUILDPLATFORM gitman--final AS nodenv--gitman
 WORKDIR /app
@@ -50,7 +50,7 @@ RUN --mount=type=cache,target=/root/.gitcache \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
 # TODO: Run on current architecture
-FROM debian:12.6-slim AS nodenv--build1
+FROM debian:12.6-slim AS nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -63,7 +63,7 @@ RUN ./nodenv/src/configure && \
 COPY --from=node-build--gitman /app/gitman/node-build/ ./nodenv/plugins/node-build/
 
 # TODO: Setup cross compilation variables
-FROM --platform=$BUILDPLATFORM debian:12.6-slim AS nodenv--build2
+FROM --platform=$BUILDPLATFORM debian:12.6-slim AS nodejs--build2
 ARG TARGETARCH TARGETVARIANT
 WORKDIR /app
 RUN export CFLAGS="-s" && \
@@ -73,7 +73,9 @@ RUN export CFLAGS="-s" && \
     export CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS2="--cross-compiling --dest-os=linux" && \
-    export NODE_MAKE_OPTS="-j$(nproc --all)" && \
+    export NODE_MAKE_OPTS="" && \
+    export NODE_MAKE_OPTS2="-j$(nproc --all)" && \
+    export MAKE_OPTS2="-j$(nproc --all)" && \
     if [ "$TARGETARCH" = 386 ] || [ "$TARGETARCH" = amd64 ]; then \
         export CFLAGS2="$CFLAGS -mtune=generic" && \
         export CXXFLAGS2="$CXXFLAGS -mtune=generic" && \
@@ -142,7 +144,7 @@ RUN export CFLAGS="-s" && \
     printf 'export NODE_MAKE_OPTS="%s"\n' "$NODE_MAKE_OPTS" >>build-env.sh
 COPY .node-version ./
 RUN printf 'export _NODE_VERSION="%s"\n' "$(cat .node-version)" >>build-env.sh
-COPY --from=nodenv--build1 /app/ ./
+COPY --from=nodejs--build1 /app/ ./
 
 # TODO: Test optimization options from https://www.reddit.com/r/cpp/comments/d74hfi/additional_optimization_options_in_gcc/
 # -fdevirtualize-at-ltrans
@@ -160,35 +162,57 @@ COPY --from=nodenv--build1 /app/ ./
 # - NODE_CONFIGURE_OPTS="--enable-lto"
 # - CFLAGS="-flto"
 # - CXXFLAGS="-flto"
-FROM debian:12.6-slim AS nodenv--build3
+# Compile NodeJS
+FROM debian:12.6-slim AS nodejs--build3
 WORKDIR /app
 # There is a probably bug with GCC-12, that's why GCC-11 is installed instead
 # See more: https://github.com/nodejs/node/issues/53633
-# TODO: Use default GCC or after this problem is fixed or GCC-13 is available in stable debian
+# TODO: Use default GCC(-12) after this problem is fixed or GCC-13 if it's available in stable debian
+# TODO: Remove binutils
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        binutils ca-certificates curl g++-11 gcc-11 git libc6 make python3 time >/dev/null && \
+        binutils ca-certificates curl g++-11 gcc-11 git libc6 make moreutils python3 time >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 ENV NODENV_ROOT=/app/nodenv \
     PATH="/app/nodenv/bin:$PATH"
-COPY --from=nodenv--build2 /app/ ./
-RUN --mount=type=cache,target=/app/node-downloads \
-    --mount=type=cache,target=/app/node-builds \
-    export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
+COPY --from=nodejs--build2 /app/ ./
+# TODO: Enable build cache
+# RUN --mount=type=cache,target=/app/node-downloads \
+#     --mount=type=cache,target=/app/node-builds \
+# TODO: Run compilation under "chronic"
+# TODO: Remove debug multiple builds
+RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
     export NODE_BUILD_BUILD_PATH="/app/node-builds/$(shasum /app/build-env.sh | sed 's~ .*$~~')" && \
     mkdir -p "$NODE_BUILD_CACHE_PATH" "$NODE_BUILD_BUILD_PATH" && \
-    find "$NODE_BUILD_BUILD_PATH" >build-dir-before.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-before.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-before.txt && \
     . /app/build-env.sh && \
-    nodenv install --compile --keep "$(cat .node-version)" && \
-    find "$NODE_BUILD_BUILD_PATH" >build-dir-after.txt && \
-    rm -rf "./nodenv/versions/$(cat .node-version)/share" "./nodenv/versions/$(cat .node-version)/include" && \
-    strip --strip-all "./nodenv/versions/$(cat .node-version)/bin/node" && \
-    mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default'
+    printf 'Time 1:\n' >>time.txt && \
+    ( time chronic nodenv install --compile --keep --verbose "$(cat .node-version)" 2>&1 ) 2>>time.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after.txt && \
+    mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default' && \
+    rm -rf "./nodenv/versions/default/share" "./nodenv/versions/default/include" && \
+    strip --strip-all './nodenv/versions/default/bin/node' && \
+    printf 'Time 2:\n' >>time.txt && \
+    ( time chronic nodenv install --compile --keep --verbose "$(cat .node-version)" 2>&1 ) 2>>time.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after2.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after2.txt && \
+    mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default2' && \
+    rm -rf "./nodenv/versions/default2/share" "./nodenv/versions/default2/include" && \
+    strip --strip-all './nodenv/versions/default2/bin/node' && \
+    printf 'Time 3:\n' >>time.txt && \
+    ( time chronic nodenv install --keep --verbose "$(cat .node-version)" 2>&1 ) 2>>time.txt && \
+    find "$NODE_BUILD_CACHE_PATH" >downloads-dir-after3.txt && \
+    find "$NODE_BUILD_BUILD_PATH" >builds-dir-after3.txt && \
+    mv "./nodenv/versions/$(cat .node-version)" './nodenv/versions/default3' && \
+    rm -rf "./nodenv/versions/default2/share" "./nodenv/versions/default3/include" && \
+    strip --strip-all './nodenv/versions/default3/bin/node'
 
 # TODO: Optimize and minify /app/nodenv/versions/default/lib/node_modules
 # TODO: Minify files /app/nodenv/versions/default/bin/{corepack,npm,npx}
 
-FROM debian:12.6-slim AS nodenv--final
+FROM debian:12.6-slim AS nodejs-build--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -203,7 +227,7 @@ RUN apt-get update -qq && \
             libatomic1 >/dev/null && \
     true; fi && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--build3 /app/nodenv/versions/default/ ./.node/
+COPY --from=nodejs--build3 /app/nodenv/versions/default/ ./.node/
 ENV PATH="/app/.node/bin:$PATH"
 # Validate installation
 RUN chronic node --version && \
