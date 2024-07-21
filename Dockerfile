@@ -73,6 +73,7 @@ RUN export CFLAGS="-s" && \
     export CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS="" && \
     export NODE_CONFIGURE_OPTS2="--cross-compiling --dest-os=linux" && \
+    export NODE_MAKE_OPTS="" && \
     export NODE_MAKE_OPTS2="-j$(nproc --all)" && \
     export MAKE_OPTS2="-j$(nproc --all)" && \
     if [ "$TARGETARCH" = 386 ] || [ "$TARGETARCH" = amd64 ]; then \
