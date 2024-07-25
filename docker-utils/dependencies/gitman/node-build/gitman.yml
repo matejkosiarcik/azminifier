@@ -14,7 +14,7 @@ sources:
 sources_locked:
   - repo: https://github.com/nodenv/node-build.git
     name: node-build
-    rev: b93c8509e857dc0501436f5f0a88f468407b5940
+    rev: 070006d7aafa45d575c2b162aad689dcce7fe6b1
     type: git
     params:
     sparse_paths:
