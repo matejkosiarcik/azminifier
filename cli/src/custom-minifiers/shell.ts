@@ -24,9 +24,9 @@ function postProcessFile(fileContent: string, mode: 'bash' | 'zsh'): string {
     switch (mode) {
         case 'bash': {
             return initialPostProcessedFile;
-                // .split('\n')
-                // .map((line) => line.replace(/;$/, ''))
-                // .join('\n');
+            // .split('\n')
+            // .map((line) => line.replace(/;$/, ''))
+            // .join('\n');
         }
         case 'zsh': {
             return initialPostProcessedFile;
@@ -69,7 +69,7 @@ export async function minifyShellCustom(shellFile: string) {
     }
 
     const executable = mode === 'sh' ? 'bash' : mode;
-    const scriptFilePath = path.join(paths.minifierDirs.shell, `minify-${mode}.${mode === 'zsh' ? 'zsh-mask': 'sh'}`);
+    const scriptFilePath = path.join(paths.minifierDirs.shell, `minify-${mode}.${mode === 'zsh' ? 'zsh-mask' : 'sh'}`);
 
     const minifiedFileCommand = await execa([executable, scriptFilePath, shellFile]);
 
