@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "minify-xml": "^4.4.1",
+    "minify-xml": "^4.5.2",
     "terser": "^5.31.3"
   },
   "devDependencies": {
