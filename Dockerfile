@@ -21,7 +21,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --requirement requirements.txt --target python-packages --quiet
+    python3 -m pip install --requirement requirements.txt --target python-vendor --quiet
 
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS gitman--final
 WORKDIR /app
@@ -30,8 +30,8 @@ RUN apt-get update -qq && \
         ca-certificates git python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=gitman--base /app/ ./
-ENV PATH="/app/python-packages/bin:$PATH" \
-    PYTHONPATH=/app/python-packages
+ENV PATH="/app/python-vendor/bin:$PATH" \
+    PYTHONPATH=/app/python-vendor
 
 ## Custom NodeJS ##
 
@@ -56,11 +56,11 @@ RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         g++ gcc make >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
+COPY --from=nodenv--gitman /app/gitman-repositories/nodenv/ ./nodenv/
 ENV NODENV_ROOT=/app/nodenv
 RUN ./nodenv/src/configure && \
     make -C ./nodenv/src
-COPY --from=node-build--gitman /app/gitman/node-build/ ./nodenv/plugins/node-build/
+COPY --from=node-build--gitman /app/gitman-repositories/node-build/ ./nodenv/plugins/node-build/
 
 # TODO: Setup cross compilation variables
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS nodejs--build2
@@ -331,9 +331,9 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY minifiers/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --requirement requirements.txt --target "$PWD/python-packages" --quiet && \
-    find /app/python-packages -type f -iname '*.py[co]' -delete && \
-    find /app/python-packages -type d -iname '__pycache__' -prune -exec rm -rf {} \;
+    python3 -m pip install --requirement requirements.txt --target "$PWD/python-vendor" --quiet && \
+    find /app/python-vendor -type f -iname '*.py[co]' -delete && \
+    find /app/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS minifiers-python--build2
 WORKDIR /app
@@ -342,18 +342,18 @@ RUN apt-get update -qq && \
         jq moreutils python3 inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python--build1 /app/python-packages/ ./python-packages/
+COPY --from=minifiers-python--build1 /app/python-vendor/ ./python-vendor/
 COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
-ENV PATH="/app/python-packages/bin:$PATH" \
-    PYTHONPATH=/app/python-packages \
+ENV PATH="/app/python-vendor/bin:$PATH" \
+    PYTHONPATH=/app/python-vendor \
     PYTHONDONTWRITEBYTECODE=1
 # TODO: Reenable
 # RUN touch /usage-list.txt && \
-#     inotifywait --daemon --recursive --event access /app/python-packages --outfile /usage-list.txt --format '%w%f' && \
+#     inotifywait --daemon --recursive --event access /app/python-vendor --outfile /usage-list.txt --format '%w%f' && \
 #     chronic sh /utils/check-minifiers-python.sh && \
 #     killall inotifywait
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
-# RUN sh /utils/prune-inotifylist.sh ./python-packages /usage-list.txt
+# RUN sh /utils/prune-inotifylist.sh ./python-vendor /usage-list.txt
 
 FROM debian:12.6-slim AS minifiers-python--final
 WORKDIR /app
@@ -362,10 +362,10 @@ RUN apt-get update -qq && \
         jq moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python--build2 /app/python-packages ./python-packages/
+COPY --from=minifiers-python--build2 /app/python-vendor ./python-vendor/
 COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
-ENV PATH="/app/python-packages/bin:$PATH" \
-    PYTHONPATH=/app/python-packages \
+ENV PATH="/app/python-vendor/bin:$PATH" \
+    PYTHONPATH=/app/python-vendor \
     PYTHONDONTWRITEBYTECODE=1
 RUN chronic sh /utils/check-minifiers-python.sh
 

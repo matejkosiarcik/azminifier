@@ -13,7 +13,7 @@ PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%s' "$(PRO
 
 .DEFAULT: all
 .PHONY: all
-all: clean bootstrap build test docker-build docker-multibuild
+all: clean bootstrap build test docker-build docker-build-multiarch
 
 .PHONY: bootstrap
 bootstrap:
@@ -26,19 +26,19 @@ bootstrap:
 	printf 'minifiers ' | tr ' ' '\n' | while read -r dir; do \
 		cd "$(PROJECT_DIR)/$$dir" && \
 		PIP_DISABLE_PIP_VERSION_CHECK=1 \
-			python3 -m pip install --requirement requirements.txt --target "$$PWD/python-packages" --quiet --upgrade && \
+			python3 -m pip install --requirement requirements.txt --target "$$PWD/python-vendor" --quiet --upgrade && \
 	true ; done
 
 	# Gitman package
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman" && \
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
-		python3 -m pip install --requirement requirements.txt --target "$$PWD/python-packages" --quiet --upgrade
+		python3 -m pip install --requirement requirements.txt --target "$$PWD/python-vendor" --quiet --upgrade
 
 	# Gitman minifiers
 	# printf ' '  | while read -r dir; do \
 	# 	cd "$(PROJECT_DIR)/minifiers/gitman/$$dir" && \
-	# 	PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python-packages/bin:$$PATH" \
-	# 	PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python-packages" \
+	# 	PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python-vendor/bin:$$PATH" \
+	# 	PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python-vendor" \
 	# 	PYTHONDONTWRITEBYTECODE=1 \
 	# 		gitman install --quiet --force && \
 	# true ; done
@@ -46,8 +46,8 @@ bootstrap:
 	# Gitman build utils
 	printf 'node-build nodenv ' | tr ' ' '\n' | while read -r dir; do \
 		cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir" && \
-		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python-packages/bin:$$PATH" \
-		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python-packages" \
+		PATH="$(PROJECT_DIR_FORPATH)/docker-utils/dependencies/gitman/python-vendor/bin:$$PATH" \
+		PYTHONPATH="$(PROJECT_DIR)/docker-utils/dependencies/gitman/python-vendor" \
 		PYTHONDONTWRITEBYTECODE=1 \
 			gitman install --quiet --force && \
 	true ; done
@@ -60,31 +60,25 @@ test:
 build:
 	npm --prefix cli run build
 
-.PHONY: clean
-clean:
-	rm -rf \
-		"$(PROJECT_DIR)/cli/dist" \
-		"$(PROJECT_DIR)/cli/node_modules" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/gitman/python-packages" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/gitman/venv" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/python-packages" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/venv" \
-		"$(PROJECT_DIR)/minifiers/node_modules" \
-		"$(PROJECT_DIR)/minifiers/python-packages"
-
-	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
-		rm -rf "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir/gitman" && \
-	true ; done
-
 .PHONY: docker-build
 docker-build:
 	time docker build . --tag matejkosiarcik/unnecessary-minifier:dev
 
-.PHONY: docker-multibuild
-docker-multibuild:
+.PHONY: docker-build-multiarch
+docker-build-multiarch:
 	set -e && \
 	printf '386 amd64 arm/v5 arm/v6 arm/v7 arm64/v8 ppc64le s390x ' | tr ' ' '\n' | \
 		while read -r arch; do \
 			printf 'Building for linux/%s:\n' "$$arch" && \
 			time docker build . --tag "matejkosiarcik/unnecessary-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
 		true; done
+
+.PHONY: clean
+clean:
+	find "$(PROJECT_DIR)" -type d \( \
+		-name "dist" -or \
+		-name "gitman-repositories" -or \
+		-name "node_modules" -or \
+		-name "python-vendor" -or \
+		-name "venv" \
+	\) -prune -exec rm -rf {} \;
