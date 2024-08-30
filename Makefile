@@ -13,7 +13,7 @@ PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%s' "$(PRO
 
 .DEFAULT: all
 .PHONY: all
-all: clean bootstrap build test docker-build docker-build-multiarchmake
+all: clean bootstrap build test docker-build docker-build-multiarch
 
 .PHONY: bootstrap
 bootstrap:
