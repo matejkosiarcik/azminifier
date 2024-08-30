@@ -9,7 +9,7 @@ export const paths = {
         shell: path.join(repoRootPath, 'minifiers', 'shell'),
     },
     bin: {
-        python: path.join(repoRootPath, 'minifiers', 'python-packages', 'bin'),
+        python: path.join(repoRootPath, 'minifiers', 'python-vendor', 'bin'),
         nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
     }
 };

@@ -15,7 +15,7 @@ Package Control.*
 # Dependencies
 Brewfile.lock.json
 node_modules/
-python-packages/
+python-vendor/
 venv/
 git/
 
