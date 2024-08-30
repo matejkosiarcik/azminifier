@@ -13,7 +13,7 @@ PROJECT_DIR_FORPATH := $(shell if [ "$(IS_MINGW)" = y ]; then printf '%s' "$(PRO
 
 .DEFAULT: all
 .PHONY: all
-all: clean bootstrap build test docker-build docker-multibuild
+all: clean bootstrap build test docker-build docker-build-multiarchmake
 
 .PHONY: bootstrap
 bootstrap:
@@ -64,8 +64,8 @@ build:
 docker-build:
 	time docker build . --tag matejkosiarcik/unnecessary-minifier:dev
 
-.PHONY: docker-multibuild
-docker-multibuild:
+.PHONY: docker-build-multiarch
+docker-build-multiarch:
 	set -e && \
 	printf '386 amd64 arm/v5 arm/v6 arm/v7 arm64/v8 ppc64le s390x ' | tr ' ' '\n' | \
 		while read -r arch; do \
