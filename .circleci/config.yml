@@ -23,14 +23,14 @@ workflows:
 jobs:
   azlint:
     docker:
-      - image: matejkosiarcik/azlint:0.6.12
+      - image: matejkosiarcik/azlint:0.6.13
     steps:
       - checkout
       - run: azlint
 
   native-build:
     docker:
-      - image: debian:12.5
+      - image: debian:12.6
     steps:
       - checkout
       - run:
@@ -52,7 +52,7 @@ jobs:
 
   docker-build:
     docker:
-      - image: docker:27.1.1
+      - image: docker:27.2.0
     steps:
       - checkout
       - setup_remote_docker:
