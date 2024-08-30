@@ -75,16 +75,10 @@ docker-multibuild:
 
 .PHONY: clean
 clean:
-	rm -rf \
-		"$(PROJECT_DIR)/cli/dist" \
-		"$(PROJECT_DIR)/cli/node_modules" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/gitman/python-vendor" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/gitman/venv" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/python-vendor" \
-		"$(PROJECT_DIR)/docker-utils/dependencies/nodeenv/venv" \
-		"$(PROJECT_DIR)/minifiers/node_modules" \
-		"$(PROJECT_DIR)/minifiers/python-vendor"
-
-	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
-		rm -rf "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir/gitman-repositories" && \
-	true ; done
+	find "$(PROJECT_DIR)" -type d \( \
+		-name "dist" -or \
+		-name "gitman-repositories" -or \
+		-name "node_modules" -or \
+		-name "python-vendor" -or \
+		-name "venv" \
+	\) -prune -exec rm -rf {} \;
