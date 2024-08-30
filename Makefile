@@ -60,6 +60,19 @@ test:
 build:
 	npm --prefix cli run build
 
+.PHONY: docker-build
+docker-build:
+	time docker build . --tag matejkosiarcik/unnecessary-minifier:dev
+
+.PHONY: docker-multibuild
+docker-multibuild:
+	set -e && \
+	printf '386 amd64 arm/v5 arm/v6 arm/v7 arm64/v8 ppc64le s390x ' | tr ' ' '\n' | \
+		while read -r arch; do \
+			printf 'Building for linux/%s:\n' "$$arch" && \
+			time docker build . --tag "matejkosiarcik/unnecessary-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
+		true; done
+
 .PHONY: clean
 clean:
 	rm -rf \
@@ -75,16 +88,3 @@ clean:
 	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
 		rm -rf "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir/gitman" && \
 	true ; done
-
-.PHONY: docker-build
-docker-build:
-	time docker build . --tag matejkosiarcik/unnecessary-minifier:dev
-
-.PHONY: docker-multibuild
-docker-multibuild:
-	set -e && \
-	printf '386 amd64 arm/v5 arm/v6 arm/v7 arm64/v8 ppc64le s390x ' | tr ' ' '\n' | \
-		while read -r arch; do \
-			printf 'Building for linux/%s:\n' "$$arch" && \
-			time docker build . --tag "matejkosiarcik/unnecessary-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
-		true; done
