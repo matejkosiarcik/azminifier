@@ -86,5 +86,5 @@ clean:
 		"$(PROJECT_DIR)/minifiers/python-vendor"
 
 	printf 'node-build nodenv nodenv-installer nvm-installer ' | tr ' ' '\n' | while read -r dir; do \
-		rm -rf "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir/gitman" && \
+		rm -rf "$(PROJECT_DIR)/docker-utils/dependencies/gitman/$$dir/gitman-repositories" && \
 	true ; done

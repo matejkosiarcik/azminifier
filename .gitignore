@@ -17,7 +17,7 @@ Brewfile.lock.json
 node_modules/
 python-vendor/
 venv/
-git/
+gitman-repositories/
 
 # Test artifacts
 test-results/

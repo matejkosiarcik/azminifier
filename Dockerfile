@@ -56,11 +56,11 @@ RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         g++ gcc make >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--gitman /app/gitman/nodenv/ ./nodenv/
+COPY --from=nodenv--gitman /app/gitman-repositories/nodenv/ ./nodenv/
 ENV NODENV_ROOT=/app/nodenv
 RUN ./nodenv/src/configure && \
     make -C ./nodenv/src
-COPY --from=node-build--gitman /app/gitman/node-build/ ./nodenv/plugins/node-build/
+COPY --from=node-build--gitman /app/gitman-repositories/node-build/ ./nodenv/plugins/node-build/
 
 # TODO: Setup cross compilation variables
 FROM --platform=$BUILDPLATFORM debian:12.6-slim AS nodejs--build2

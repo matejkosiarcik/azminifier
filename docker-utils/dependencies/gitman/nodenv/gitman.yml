@@ -1,4 +1,4 @@
-location: gitman/
+location: gitman-repositories/
 sources:
   - repo: https://github.com/nodenv/nodenv.git
     name: nodenv
