@@ -5,9 +5,7 @@
     "build": "run-s build:*",
     "build:1-rollup": "rollup --silent --config rollup.config.js",
     "build:2-minify": "terser dist/cli.js --output dist/cli.js",
-    "run": "tsx src/cli.ts",
-    "test": "playwright test",
-    "test:only": "tsx --test --test-only tests/**/*.test.ts"
+    "run": "tsx src/cli.ts"
   },
   "dependencies": {
     "execa": "^9.5.2",
@@ -18,7 +16,6 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
     "@rollup/plugin-typescript": "^12.1.2",
     "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^22.10.2",

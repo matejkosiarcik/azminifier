@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { wildcardToRegex } from '../../src/utils/utils.ts';
+import { wildcardToRegex } from '../../../cli/src/utils/utils.ts';
 
 const regexPrefix = /^(.*\/)?/;
 const regexPostfix = /$/;
