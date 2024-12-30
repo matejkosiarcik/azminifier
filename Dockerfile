@@ -13,7 +13,7 @@
 
 ## Gitman ##
 
-FROM --platform=$BUILDPLATFORM debian:12.7-slim AS gitman--base
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS gitman--base
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -23,7 +23,7 @@ COPY docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target python-vendor --quiet
 
-FROM --platform=$BUILDPLATFORM debian:12.7-slim AS gitman--final
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS gitman--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -50,7 +50,7 @@ RUN --mount=type=cache,target=/root/.gitcache \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
 # TODO: Run on current architecture
-FROM debian:12.7-slim AS nodejs--build1
+FROM debian:12.8-slim AS nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -63,7 +63,7 @@ RUN ./nodenv/src/configure && \
 COPY --from=node-build--gitman /app/gitman-repositories/node-build/ ./nodenv/plugins/node-build/
 
 # TODO: Setup cross compilation variables
-FROM --platform=$BUILDPLATFORM debian:12.7-slim AS nodejs--build2
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS nodejs--build2
 ARG TARGETARCH TARGETVARIANT
 WORKDIR /app
 RUN export CFLAGS="-s" && \
@@ -163,7 +163,7 @@ COPY --from=nodejs--build1 /app/ ./
 # - CFLAGS="-flto"
 # - CXXFLAGS="-flto"
 # Compile NodeJS
-FROM debian:12.7-slim AS nodejs--build3
+FROM debian:12.8-slim AS nodejs--build3
 WORKDIR /app
 # There is a probably bug with GCC-12, that's why GCC-11 is installed instead
 # See more: https://github.com/nodejs/node/issues/53633
@@ -212,7 +212,7 @@ RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
 # TODO: Optimize and minify /app/nodenv/versions/default/lib/node_modules
 # TODO: Minify files /app/nodenv/versions/default/bin/{corepack,npm,npx}
 
-FROM debian:12.7-slim AS nodejs-build--final
+FROM debian:12.8-slim AS nodejs-build--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -239,7 +239,7 @@ RUN chronic node --version && \
 
 ### Main CLI ###
 
-FROM --platform=$BUILDPLATFORM node:22.8.0-slim AS cli--build
+FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS cli--build
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -258,7 +258,7 @@ RUN npm run --silent build && \
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
 
-FROM debian:12.7-slim AS cli--final
+FROM debian:12.8-slim AS cli--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -275,7 +275,7 @@ RUN chronic sh /utils/check-minifiers-custom.sh
 
 # NodeJS #
 
-FROM --platform=$BUILDPLATFORM node:22.8.0-slim AS minifiers-nodejs--build1
+FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS minifiers-nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -288,7 +288,7 @@ RUN --mount=type=cache,target=/root/.npm \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
 
-FROM --platform=$BUILDPLATFORM debian:12.7-slim AS minifiers-nodejs--build2
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers-nodejs--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -307,7 +307,7 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
-FROM debian:12.7-slim AS minifiers-nodejs--final
+FROM debian:12.8-slim AS minifiers-nodejs--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -322,7 +322,7 @@ RUN chronic sh /utils/check-minifiers-nodejs.sh
 
 # Python #
 
-FROM --platform=$BUILDPLATFORM debian:12.7-slim AS minifiers-python--build1
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers-python--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -335,7 +335,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     find /app/python-vendor -type f -iname '*.py[co]' -delete && \
     find /app/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM debian:12.7-slim AS minifiers-python--build2
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers-python--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -355,7 +355,7 @@ ENV PATH="/app/python-vendor/bin:$PATH" \
 # COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./python-vendor /usage-list.txt
 
-FROM debian:12.7-slim AS minifiers-python--final
+FROM debian:12.8-slim AS minifiers-python--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -374,7 +374,7 @@ RUN chronic sh /utils/check-minifiers-python.sh
 # Mainly the apt install scripts should be the same
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
-FROM debian:12.7-slim AS prefinal
+FROM debian:12.8-slim AS prefinal
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
@@ -393,7 +393,7 @@ COPY --from=minifiers-python--final /app/ ./
 
 ### Final stage ###
 
-FROM debian:12.7-slim
+FROM debian:12.8-slim
 RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' >/filelist.txt 2>/dev/null && \
     apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
