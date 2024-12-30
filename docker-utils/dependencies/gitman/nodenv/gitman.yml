@@ -14,7 +14,7 @@ sources:
 sources_locked:
   - repo: https://github.com/nodenv/nodenv.git
     name: nodenv
-    rev: a0089384b7c4e8fba66ebb90dad255311e49f44e
+    rev: 8948584145f2ce1853967337c91f2e09996aa1c3
     type: git
     params:
     sparse_paths:
