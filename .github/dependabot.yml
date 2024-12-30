@@ -5,7 +5,7 @@ updates:
     directory: /
     schedule:
       interval: daily
-      time: "00:15"
+      time: "01:00"
       timezone: Europe/Bratislava
     reviewers:
       - matejkosiarcik
@@ -17,11 +17,13 @@ updates:
         patterns:
           - "*"
 
+  # Docker
   - package-ecosystem: docker
-    directory: /
+    directories:
+      - /
     schedule:
       interval: daily
-      time: "00:30"
+      time: "02:15"
       timezone: Europe/Bratislava
     reviewers:
       - matejkosiarcik
@@ -33,11 +35,15 @@ updates:
         patterns:
           - "*"
 
+  # NPM
   - package-ecosystem: npm
-    directory: /cli/
+    directories:
+      - /cli
+      - /minifiers
+    versioning-strategy: increase
     schedule:
       interval: daily
-      time: "00:45"
+      time: "02:30"
       timezone: Europe/Bratislava
     reviewers:
       - matejkosiarcik
@@ -45,31 +51,17 @@ updates:
       - matejkosiarcik
     open-pull-requests-limit: 1
     groups:
-      npm[cli]:
+      npm:
         patterns:
           - "*"
 
-  - package-ecosystem: npm
-    directory: /minifiers
-    schedule:
-      interval: daily
-      time: "01:15"
-      timezone: Europe/Bratislava
-    reviewers:
-      - matejkosiarcik
-    assignees:
-      - matejkosiarcik
-    open-pull-requests-limit: 1
-    groups:
-      npm[minifiers]:
-        patterns:
-          - "*"
-
+  # Pip
   - package-ecosystem: pip
-    directory: /minifiers
+    directories:
+      - /minifiers
     schedule:
       interval: daily
-      time: "01:45"
+      time: "02:45"
       timezone: Europe/Bratislava
     reviewers:
       - matejkosiarcik
@@ -77,6 +69,6 @@ updates:
       - matejkosiarcik
     open-pull-requests-limit: 1
     groups:
-      pip[minifiers]:
+      pip:
         patterns:
           - "*"
