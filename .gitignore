@@ -21,7 +21,10 @@ gitman-repositories/
 
 # Test artifacts
 test-results/
+playwright-report/
 
 # Misc
 .env
 *.bak
+tmp/
+dist/
