@@ -62,7 +62,7 @@ build:
 
 .PHONY: docker-build
 docker-build:
-	time docker build . --tag matejkosiarcik/unnecessary-minifier:dev
+	time docker build . --tag matejkosiarcik/azminifier:dev
 
 .PHONY: docker-build-multiarch
 docker-build-multiarch:
@@ -70,7 +70,7 @@ docker-build-multiarch:
 	printf '386 amd64 arm/v5 arm/v6 arm/v7 arm64/v8 ppc64le s390x ' | tr ' ' '\n' | \
 		while read -r arch; do \
 			printf 'Building for linux/%s:\n' "$$arch" && \
-			time docker build . --tag "matejkosiarcik/unnecessary-minifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
+			time docker build . --tag "matejkosiarcik/azminifier:dev-$$(printf '%s' "$$arch" | tr '/' '-')" --platform "linux/$$arch" && \
 		true; done
 
 .PHONY: clean

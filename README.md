@@ -20,13 +20,13 @@ This project is in early stage of development.
 For minifying files in current directory, run:
 
 ```sh
-docker run --rm -v "$PWD:/project" matejkosiarcik/unnecessary-minifier:latest
+docker run --rm -v "$PWD:/project" matejkosiarcik/azminifier:latest
 ```
 
 Here is a list of all available CLI options:
 
 ```sh
-$ docker run --rm -v "$PWD:/project" matejkosiarcik/unnecessary-minifier:latest --help
+$ docker run --rm -v "$PWD:/project" matejkosiarcik/azminifier:latest --help
 
 uniminify [options] <path..>
 

@@ -10,7 +10,7 @@ on:
       - "v*.*.*"
 
 env:
-  DOCKER_IMAGE: matejkosiarcik/unnecessary-minifier
+  DOCKER_IMAGE: matejkosiarcik/azminifier
   DOCKERHUB_USERNAME: matejkosiarcik
 
 jobs:
