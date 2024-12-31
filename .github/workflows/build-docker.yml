@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  DOCKER_IMAGE: matejkosiarcik/unnecessary-minifier
+  DOCKER_IMAGE: matejkosiarcik/azminifier
 
 jobs:
   build:
