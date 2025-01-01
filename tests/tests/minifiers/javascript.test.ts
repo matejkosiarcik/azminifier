@@ -30,7 +30,7 @@ test.describe('Minify JavaScript', () => {
 
     const simpleDocuments = [
         {
-            input: 'let foo = "foo";',
+            input: '   let  foo   =     "foo"  ;  ',
             output: 'let foo="foo";',
         },
         {
