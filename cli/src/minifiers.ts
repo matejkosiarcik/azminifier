@@ -8,7 +8,10 @@ import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { minifyShellCustom } from './custom-minifiers/shell.ts';
 
 const __filename = url.fileURLToPath(import.meta.url);
-const repoRootPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
+const repoRootPath = (() => {
+    const initialRepoPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
+    return initialRepoPath === '/' ? '/app' : initialRepoPath;
+})();
 
 function getStatusForCommand(command: ExecaError | ExecaResult): void {
     if (command.exitCode === 0) {
@@ -92,7 +95,6 @@ async function minifyYaml(file: string): Promise<void> {
 
     // return [true, command.all ?? '<empty>'];
 }
-
 
 async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<void> {
     const extraArgs = {
