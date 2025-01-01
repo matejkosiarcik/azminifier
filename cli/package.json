@@ -5,7 +5,8 @@
     "build": "run-s build:*",
     "build:1-rollup": "rollup --silent --config rollup.config.js",
     "build:2-minify": "terser dist/cli.js --output dist/cli.js",
-    "run": "tsx src/cli.ts"
+    "run": "tsx src/cli.ts",
+    "postinstall": "patch-package --patch-dir patches"
   },
   "dependencies": {
     "execa": "^9.5.2",
@@ -22,6 +23,7 @@
     "@types/yargs": "^17.0.33",
     "modclean": "^3.0.0-beta.1",
     "npm-run-all": "^4.1.5",
+    "patch-package": "^8.0.0",
     "rollup": "^4.29.1",
     "terser": "^5.37.0",
     "tsheredoc": "^1.0.1",

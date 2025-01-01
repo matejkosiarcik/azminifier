@@ -249,6 +249,7 @@ RUN apt-get update -qq && \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY ./cli/package.json cli/package-lock.json ./
+COPY ./cli/patches/ ./patches/
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --no-fund --loglevel=error && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress
@@ -376,7 +377,7 @@ RUN chronic sh /utils/check-minifiers-python.sh
 # Mainly the apt install scripts should be the same
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
-FROM debian:12.8-slim AS prefinal
+FROM debian:12.8-slim AS minified--helper
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
@@ -386,13 +387,59 @@ RUN apt-get update -qq && \
     chmod a+x /usr/bin/azminifier
 COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
-WORKDIR /app
-COPY ./VERSION.txt ./
-COPY --from=cli--final /app/ ./
-WORKDIR /app/minifiers
-COPY --from=minifiers--nodejs--final /app/ ./
-COPY --from=minifiers--python--final /app/ ./
-COPY ./minifiers/config/terser.default.config.json ./config/
+COPY ./VERSION.txt /app/
+COPY --from=cli--final /app/ /app/
+COPY --from=minifiers--nodejs--final /app/ /app/minifiers/
+COPY --from=minifiers--python--final /app/ /app/minifiers/
+COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
+
+FROM debian:12.8-slim AS cli--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app/ /app/
+COPY --from=cli--final /app/ /app-minified/
+RUN azminifier /app-minified
+
+FROM debian:12.8-slim AS minifiers--nodejs--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app/ /app/
+COPY --from=minifiers--nodejs--final /app/ /app-minified/
+RUN azminifier /app-minified
+
+FROM debian:12.8-slim AS minifiers--python--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app/ /app/
+COPY --from=minifiers--python--final /app/ /app-minified/
+RUN azminifier /app-minified
+
+FROM debian:12.8-slim AS prefinal
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY ./docker-utils/sanity-checks/check-system.sh /utils/
+RUN chronic sh /utils/check-system.sh
+COPY ./VERSION.txt /app/
+COPY --from=cli--minified /app-minified/ /app/
+COPY --from=minifiers--nodejs--minified /app-minified/ /app/minifiers/
+COPY --from=minifiers--python--final /app/ /app/minifiers/
+COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
 
 ### Final stage ###
 

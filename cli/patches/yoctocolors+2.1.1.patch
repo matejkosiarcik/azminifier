@@ -1,0 +1,8 @@
+diff --git a/node_modules/yoctocolors/index.js b/node_modules/yoctocolors/index.js
+index 4ba092b..008f38b 100644
+--- a/node_modules/yoctocolors/index.js
++++ b/node_modules/yoctocolors/index.js
+@@ -1,2 +1,2 @@
+ export * from './base.js';
+-export * as default from './base.js';
++export * as 'default' from './base.js';
