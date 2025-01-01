@@ -249,6 +249,7 @@ RUN apt-get update -qq && \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY ./cli/package.json cli/package-lock.json ./
+COPY ./cli/patches/ ./patches/
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --no-fund --loglevel=error && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress
@@ -398,7 +399,10 @@ WORKDIR /
 # RUN cp -R /app /app-minified && \
 #     azminifier /app-minified && \
 #     rm -rf /app && \
-#     mv /app-minified /app
+#     mv /app-minified /app && \
+#     cp -R /app /app-recheck && \
+#     azminifier /app-recheck && \
+#     rm -rf /app-recheck
 
 ### Final stage ###
 
