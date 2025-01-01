@@ -118,7 +118,7 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
         brute: ['--nonlatin'],
     }[level];
 
-    const command = await execa(['pyminifier', '--use-tabs', ...extraArgs, `--outfile=${file}`, file], {
+    const command = await execa(['pyminifier', ...extraArgs, `--outfile=${file}`, file], {
         env: {
             PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
             PYTHONPATH: path.dirname(binPaths.python),
