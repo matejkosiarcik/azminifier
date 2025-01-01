@@ -7,7 +7,7 @@ import { log } from './utils/log.ts';
     const version = '0.0.0';
 
     let argumentParser = yargs(hideBin(process.argv))
-        .scriptName('uniminify')
+        .scriptName('azminifier')
         .command('$0 [options] <path..>', 'Minify files', (yargs) => {
             yargs.positional('path', {
                 describe: 'Path to file/directory to minify',

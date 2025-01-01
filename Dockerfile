@@ -13,57 +13,59 @@
 
 ## Gitman ##
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS gitman--base
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS component--gitman--base
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         python3-pip python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY docker-utils/dependencies/gitman/requirements.txt ./
+COPY ./docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target python-vendor --quiet
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS gitman--final
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS component--gitman--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         ca-certificates git python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=gitman--base /app/ ./
+COPY --from=component--gitman--base /app/ ./
 ENV PATH="/app/python-vendor/bin:$PATH" \
     PYTHONPATH=/app/python-vendor
 
-## Custom NodeJS ##
+### Runtimes ###
 
-FROM --platform=$BUILDPLATFORM gitman--final AS nodenv--gitman
+## NodeJS runtime ##
+
+FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--nodenv--gitman
 WORKDIR /app
-COPY docker-utils/dependencies/gitman/nodenv/gitman.yml ./
+COPY ./docker-utils/dependencies/gitman/nodenv/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
     gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM gitman--final AS node-build--gitman
+FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--node-build--gitman
 WORKDIR /app
-COPY docker-utils/dependencies/gitman/node-build/gitman.yml ./
+COPY ./docker-utils/dependencies/gitman/node-build/gitman.yml ./
 RUN --mount=type=cache,target=/root/.gitcache \
     gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
 # TODO: Run on current architecture
-FROM debian:12.8-slim AS nodejs--build1
+FROM debian:12.8-slim AS runtime--nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         g++ gcc make >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodenv--gitman /app/gitman-repositories/nodenv/ ./nodenv/
+COPY --from=runtime--nodejs--nodenv--gitman /app/gitman-repositories/nodenv/ ./nodenv/
 ENV NODENV_ROOT=/app/nodenv
 RUN ./nodenv/src/configure && \
     make -C ./nodenv/src
-COPY --from=node-build--gitman /app/gitman-repositories/node-build/ ./nodenv/plugins/node-build/
+COPY --from=runtime--nodejs--node-build--gitman /app/gitman-repositories/node-build/ ./nodenv/plugins/node-build/
 
 # TODO: Setup cross compilation variables
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS nodejs--build2
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS runtime--nodejs--build2
 ARG TARGETARCH TARGETVARIANT
 WORKDIR /app
 RUN export CFLAGS="-s" && \
@@ -144,7 +146,7 @@ RUN export CFLAGS="-s" && \
     printf 'export NODE_MAKE_OPTS="%s"\n' "$NODE_MAKE_OPTS" >>build-env.sh
 COPY .node-version ./
 RUN printf 'export _NODE_VERSION="%s"\n' "$(cat .node-version)" >>build-env.sh
-COPY --from=nodejs--build1 /app/ ./
+COPY --from=runtime--nodejs--build1 /app/ ./
 
 # TODO: Test optimization options from https://www.reddit.com/r/cpp/comments/d74hfi/additional_optimization_options_in_gcc/
 # -fdevirtualize-at-ltrans
@@ -163,7 +165,7 @@ COPY --from=nodejs--build1 /app/ ./
 # - CFLAGS="-flto"
 # - CXXFLAGS="-flto"
 # Compile NodeJS
-FROM debian:12.8-slim AS nodejs--build3
+FROM debian:12.8-slim AS runtime--nodejs--build3
 WORKDIR /app
 # There is a probably bug with GCC-12, that's why GCC-11 is installed instead
 # See more: https://github.com/nodejs/node/issues/53633
@@ -175,7 +177,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 ENV NODENV_ROOT=/app/nodenv \
     PATH="/app/nodenv/bin:$PATH"
-COPY --from=nodejs--build2 /app/ ./
+COPY --from=runtime--nodejs--build2 /app/ ./
 # TODO: Enable build cache
 # RUN --mount=type=cache,target=/app/node-downloads \
 #     --mount=type=cache,target=/app/node-builds \
@@ -212,7 +214,7 @@ RUN export NODE_BUILD_CACHE_PATH="/app/node-downloads/$(cat .node-version)" && \
 # TODO: Optimize and minify /app/nodenv/versions/default/lib/node_modules
 # TODO: Minify files /app/nodenv/versions/default/bin/{corepack,npm,npx}
 
-FROM debian:12.8-slim AS nodejs-build--final
+FROM debian:12.8-slim AS runtime--nodejs--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -227,7 +229,7 @@ RUN apt-get update -qq && \
             libatomic1 >/dev/null && \
     true; fi && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=nodejs--build3 /app/nodenv/versions/default/ ./.node/
+COPY --from=runtime--nodejs--build3 /app/nodenv/versions/default/ ./.node/
 ENV PATH="/app/.node/bin:$PATH"
 # Validate installation
 RUN chronic node --version && \
@@ -255,7 +257,7 @@ COPY ./cli/rollup.config.js ./
 COPY ./cli/src/ ./src/
 RUN npm run --silent build && \
     npm prune --production --silent --no-progress --no-audit
-COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
+COPY ./docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
 
 FROM debian:12.8-slim AS cli--final
@@ -268,14 +270,14 @@ RUN apt-get update -qq && \
 COPY --from=cli--build /app/node_modules ./node_modules
 COPY --from=cli--build /app/package.json ./package.json
 COPY --from=cli--build /app/dist/ ./dist/
-COPY docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
+COPY ./docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
 RUN chronic sh /utils/check-minifiers-custom.sh
 
 ### 3rd party minifiers ###
 
 # NodeJS #
 
-FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS minifiers-nodejs--build1
+FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS minifiers--nodejs--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -288,41 +290,41 @@ RUN --mount=type=cache,target=/root/.npm \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
     npm prune --production --silent --no-progress --no-audit
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers-nodejs--build2
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-nodejs--build1 /app/node_modules/ ./node_modules/
-COPY --from=minifiers-nodejs--build1 /app/package.json ./package.json
-COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
+COPY --from=minifiers--nodejs--build1 /app/node_modules/ ./node_modules/
+COPY --from=minifiers--nodejs--build1 /app/package.json ./package.json
+COPY ./docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 ENV PATH="/app/node_modules/.bin:$PATH"
 # TODO: Reenable
 # RUN touch /usage-list.txt && \
 #     inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
 #     chronic sh /utils/check-minifiers-nodejs.sh && \
 #     killall inotifywait
-# COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
+# COPY ./docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
-FROM debian:12.8-slim AS minifiers-nodejs--final
+FROM debian:12.8-slim AS minifiers--nodejs--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-nodejs--build2 /app/node_modules ./node_modules/
-COPY --from=minifiers-nodejs--build2 /app/package.json ./package.json
-COPY docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
+COPY --from=minifiers--nodejs--build2 /app/node_modules ./node_modules/
+COPY --from=minifiers--nodejs--build2 /app/package.json ./package.json
+COPY ./docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 ENV PATH="/app/node_modules/.bin:$PATH"
 RUN chronic sh /utils/check-minifiers-nodejs.sh
 
 # Python #
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers-python--build1
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -335,15 +337,15 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     find /app/python-vendor -type f -iname '*.py[co]' -delete && \
     find /app/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers-python--build2
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils python3 inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python--build1 /app/python-vendor/ ./python-vendor/
-COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
+COPY --from=minifiers--python--build1 /app/python-vendor/ ./python-vendor/
+COPY ./docker-utils/sanity-checks/check-minifiers-python.sh /utils/
 ENV PATH="/app/python-vendor/bin:$PATH" \
     PYTHONPATH=/app/python-vendor \
     PYTHONDONTWRITEBYTECODE=1
@@ -352,18 +354,18 @@ ENV PATH="/app/python-vendor/bin:$PATH" \
 #     inotifywait --daemon --recursive --event access /app/python-vendor --outfile /usage-list.txt --format '%w%f' && \
 #     chronic sh /utils/check-minifiers-python.sh && \
 #     killall inotifywait
-# COPY docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
+# COPY ./docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./python-vendor /usage-list.txt
 
-FROM debian:12.8-slim AS minifiers-python--final
+FROM debian:12.8-slim AS minifiers--python--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers-python--build2 /app/python-vendor ./python-vendor/
-COPY docker-utils/sanity-checks/check-minifiers-python.sh /utils/
+COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor/
+COPY ./docker-utils/sanity-checks/check-minifiers-python.sh /utils/
 ENV PATH="/app/python-vendor/bin:$PATH" \
     PYTHONPATH=/app/python-vendor \
     PYTHONDONTWRITEBYTECODE=1
@@ -380,16 +382,16 @@ RUN apt-get update -qq && \
         jq moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
-    chmod a+x /usr/bin/uniminify
-COPY docker-utils/sanity-checks/check-system.sh /utils/
+    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/azminifier && \
+    chmod a+x /usr/bin/azminifier
+COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 WORKDIR /app
-COPY VERSION.txt ./
+COPY ./VERSION.txt ./
 COPY --from=cli--final /app/ ./
 WORKDIR /app/minifiers
-COPY --from=minifiers-nodejs--final /app/ ./
-COPY --from=minifiers-python--final /app/ ./
+COPY --from=minifiers--nodejs--final /app/ ./
+COPY --from=minifiers--python--final /app/ ./
 COPY ./minifiers/config/terser.default.config.json ./config/
 
 ### Final stage ###
@@ -407,13 +409,13 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' >/filelist.txt 2>/de
         true; fi && \
     true; done && \
     rm -f /filelist.txt && \
-    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
-    chmod a+x /usr/bin/uniminify && \
-    useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
+    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/azminifier && \
+    chmod a+x /usr/bin/azminifier && \
+    useradd --create-home --no-log-init --shell /bin/sh --user-group --system azminifier
 COPY --from=prefinal /app/ /app/
 ENV NODE_OPTIONS=--dns-result-order=ipv4first \
     PYTHONDONTWRITEBYTECODE=1
-USER uniminify
+USER azminifier
 WORKDIR /project
-ENTRYPOINT ["uniminify"]
+ENTRYPOINT ["azminifier"]
 CMD []
