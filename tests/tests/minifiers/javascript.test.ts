@@ -28,7 +28,35 @@ test.describe('Minify JavaScript', () => {
         await performTest('', '');
     });
 
-    test(`Minify simple document`, async () => {
-        await performTest('let foo = "foo";', 'let foo="foo";');
-    });
+    const simpleDocuments = [
+        {
+            input: 'let foo = "foo";',
+            output: 'let foo="foo";',
+        },
+        {
+            input: 'var foo = "foo";',
+            output: 'var foo="foo";',
+        },
+        {
+            input: 'const foo = "foo";',
+            output: 'const foo="foo";',
+        },
+        {
+            input: 'let foo = "foo"',
+            output: 'let foo="foo";',
+        },
+        {
+            input: 'let foo = "foo"; let bar = "bar";',
+            output: 'let foo="foo";let bar="bar";',
+        },
+        {
+            input: 'let foo = "foo" \n let bar = "bar" ',
+            output: 'let foo="foo";let bar="bar";',
+        }
+    ];
+    for (const [index, variant] of simpleDocuments.entries()) {
+        test(`Minify simple document ${index}`, async () => {
+            await performTest(variant.input, variant.output);
+        });
+    }
 });
