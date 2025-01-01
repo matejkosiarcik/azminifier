@@ -424,7 +424,8 @@ RUN apt-get update -qq && \
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY --from=minified--helper /app/ /app/
 COPY --from=minifiers--python--final /app/ /app-minified/
-RUN azminifier /app-minified
+# TODO: Reenable
+# RUN azminifier /app-minified
 
 FROM debian:12.8-slim AS prefinal
 RUN apt-get update -qq && \
@@ -438,7 +439,7 @@ RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
 COPY --from=cli--minified /app-minified/ /app/
 COPY --from=minifiers--nodejs--minified /app-minified/ /app/minifiers/
-COPY --from=minifiers--python--final /app/ /app/minifiers/
+COPY --from=minifiers--python--minified /app-minified/ /app/minifiers/
 COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
 
 ### Final stage ###
