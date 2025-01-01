@@ -28,7 +28,7 @@ Here is a list of all available CLI options:
 ```sh
 $ docker run --rm -v "$PWD:/project" matejkosiarcik/azminifier:latest --help
 
-uniminify [options] <path..>
+azminifier [options] <path..>
 
 Minify files
 

@@ -380,8 +380,8 @@ RUN apt-get update -qq && \
         jq moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
-    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
-    chmod a+x /usr/bin/uniminify
+    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/azminifier && \
+    chmod a+x /usr/bin/azminifier
 COPY docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 WORKDIR /app
@@ -407,13 +407,13 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' >/filelist.txt 2>/de
         true; fi && \
     true; done && \
     rm -f /filelist.txt && \
-    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/uniminify && \
-    chmod a+x /usr/bin/uniminify && \
-    useradd --create-home --no-log-init --shell /bin/sh --user-group --system uniminify
+    printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/azminifier && \
+    chmod a+x /usr/bin/azminifier && \
+    useradd --create-home --no-log-init --shell /bin/sh --user-group --system azminifier
 COPY --from=prefinal /app/ /app/
 ENV NODE_OPTIONS=--dns-result-order=ipv4first \
     PYTHONDONTWRITEBYTECODE=1
-USER uniminify
+USER azminifier
 WORKDIR /project
-ENTRYPOINT ["uniminify"]
+ENTRYPOINT ["azminifier"]
 CMD []
