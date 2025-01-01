@@ -29,6 +29,19 @@ const binPaths = {
     nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
 };
 
+const configPath = path.join(repoRootPath, 'minifiers', 'config');
+
+/**
+ * Minify Windows and Legacy newlines into modern Linux newlines
+ */
+async function preminifyNewlines(file: string): Promise<void> {
+    const content = (await fs.readFile(file, 'utf8'))
+        .replaceAll('\n\r', '\n')
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n');
+    await fs.writeFile(file, content, 'utf8');
+}
+
 /**
  * Remove trailing whitespace and multiple joined newlines
  */
@@ -50,8 +63,6 @@ async function minifyPlainText(file: string): Promise<MinifierReturnStatus> {
         };
     }
 }
-
-// MARK: - Config files
 
 async function minifyYaml(file: string): Promise<MinifierReturnStatus> {
     try {
@@ -110,6 +121,7 @@ async function minifyYaml(file: string): Promise<MinifierReturnStatus> {
     // return [true, command.all ?? '<empty>'];
 }
 
+
 async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
     const extraArgs = {
         safe: [],
@@ -151,7 +163,7 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
 }
 
 async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
-    const command = await execa(['terser', '--no-rename', file, '--output', file], {
+    const command = await execa(['terser', '--no-rename', file, '--output', file, '--config-file', path.join(configPath, 'terser.default.config.json')], {
         env: {
             PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         }

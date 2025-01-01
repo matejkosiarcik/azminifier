@@ -390,6 +390,7 @@ COPY --from=cli--final /app/ ./
 WORKDIR /app/minifiers
 COPY --from=minifiers-nodejs--final /app/ ./
 COPY --from=minifiers-python--final /app/ ./
+COPY ./minifiers/config/terser.default.config.json ./config/
 
 ### Final stage ###
 
