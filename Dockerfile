@@ -246,13 +246,13 @@ RUN apt-get update -qq && \
         moreutils \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY cli/package.json cli/package-lock.json ./
+COPY ./cli/package.json cli/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --no-fund --loglevel=error && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress
-COPY cli/tsconfig.json ./
-COPY cli/rollup.config.js ./
-COPY cli/src/ ./src/
+COPY ./cli/tsconfig.json ./
+COPY ./cli/rollup.config.js ./
+COPY ./cli/src/ ./src/
 RUN npm run --silent build && \
     npm prune --production --silent --no-progress --no-audit
 COPY docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
@@ -282,7 +282,7 @@ RUN apt-get update -qq && \
         moreutils \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY minifiers/package.json minifiers/package-lock.json ./
+COPY ./minifiers/package.json ./minifiers/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     NODE_OPTIONS=--dns-result-order=ipv4first npm ci --unsafe-perm --no-progress --no-audit --no-fund --loglevel=error && \
     chronic npx modclean --patterns default:safe --run --error-halt --no-progress && \
@@ -329,7 +329,7 @@ RUN apt-get update -qq && \
         jq moreutils python3 python3-pip \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY minifiers/requirements.txt ./
+COPY ./minifiers/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target "$PWD/python-vendor" --quiet && \
     find /app/python-vendor -type f -iname '*.py[co]' -delete && \
@@ -390,6 +390,7 @@ COPY --from=cli--final /app/ ./
 WORKDIR /app/minifiers
 COPY --from=minifiers-nodejs--final /app/ ./
 COPY --from=minifiers-python--final /app/ ./
+COPY ./minifiers/config/terser.default.config.json ./config/
 
 ### Final stage ###
 

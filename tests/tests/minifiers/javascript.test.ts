@@ -30,7 +30,7 @@ test.describe('Minify JavaScript', () => {
 
     const simpleDocuments = [
         {
-            input: 'let foo = "foo";',
+            input: '   let  foo   =     "foo"  ;  ',
             output: 'let foo="foo";',
         },
         {
@@ -47,15 +47,43 @@ test.describe('Minify JavaScript', () => {
         },
         {
             input: 'let foo = "foo"; let bar = "bar";',
-            output: 'let foo="foo";let bar="bar";',
+            output: 'let foo="foo",bar="bar";',
         },
         {
-            input: 'let foo = "foo" \n let bar = "bar" ',
-            output: 'let foo="foo";let bar="bar";',
+            input: 'let foo = "foo";const bar = "bar";',
+            output: 'let foo="foo";const bar="bar";',
+        },
+        {
+            input: 'let foo = "foo" \n const bar = "bar" ',
+            output: 'let foo="foo";const bar="bar";',
         }
     ];
     for (const [index, variant] of simpleDocuments.entries()) {
-        test(`Minify simple document ${index}`, async () => {
+        test(`Minify simple document ${index + 1}`, async () => {
+            await performTest(variant.input, variant.output);
+        });
+    }
+
+    const newlineDocuments = [
+        {
+            input: 'console.log(1)\nconsole.log(2)\n',
+            output: 'console.log(1),console.log(2);',
+        },
+        {
+            input: 'console.log(1)\rconsole.log(2)\r',
+            output: 'console.log(1),console.log(2);',
+        },
+        {
+            input: 'console.log(1)\r\nconsole.log(2)\r\n',
+            output: 'console.log(1),console.log(2);',
+        },
+        {
+            input: 'console.log(1)\n\rconsole.log(2)\n\r',
+            output: 'console.log(1),console.log(2);',
+        },
+    ];
+    for (const [index, variant] of newlineDocuments.entries()) {
+        test(`Minify document with newlines ${index + 1}`, async () => {
             await performTest(variant.input, variant.output);
         });
     }

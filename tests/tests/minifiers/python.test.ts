@@ -28,15 +28,43 @@ test.describe('Minify Python', () => {
         await performTest('', '');
     });
 
-    test(`Minify simple document`, async () => {
-        await performTest('foo   =   "foo"', 'foo="foo"');
-    });
+    const simpleDocuments = [
+        {
+            input: 'foo   =   "foo"  ',
+            output: 'foo="foo"',
+        },
+        {
+            input: 'foo   =   "foo"\nbar = "bar"',
+            output: 'foo="foo"\nbar="bar"',
+        },
+    ];
+    for (const [index, variant] of simpleDocuments.entries()) {
+        test(`Minify simple document ${index + 1}`, async () => {
+            await performTest(variant.input, variant.output);
+        });
+    }
 
-    test(`Minify document with line endings as LF (unix)`, async () => {
-        await performTest('print(1)\nprint(2)\n', 'print(1)\nprint(2)');
-    });
-
-    test(`Minify document with line endings as CR+LF (windows)`, async () => {
-        await performTest('print(1)\r\nprint(2)\r\n', 'print(1)\nprint(2)');
-    });
+    const newlineDocuments = [
+        {
+            input: 'print(1)\nprint(2)',
+            output: 'print(1)\nprint(2)',
+        },
+        {
+            input: 'print(1)\rprint(2)',
+            output: 'print(1)\nprint(2)',
+        },
+        {
+            input: 'print(1)\r\nprint(2)',
+            output: 'print(1)\nprint(2)',
+        },
+        {
+            input: 'print(1)\n\rprint(2)',
+            output: 'print(1)\nprint(2)',
+        },
+    ];
+    for (const [index, variant] of newlineDocuments.entries()) {
+        test(`Minify document with newlines ${index + 1}`, async () => {
+            await performTest(variant.input, variant.output);
+        });
+    }
 });

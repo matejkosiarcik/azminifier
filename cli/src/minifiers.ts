@@ -10,18 +10,12 @@ import { minifyShellCustom } from './custom-minifiers/shell.ts';
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
 
-function getStatusForCommand(command: ExecaError | ExecaResult): MinifierReturnStatus {
-    const results: MinifierReturnStatus = {
-        status: command.exitCode === 0,
-        message: '',
-    };
-    results.message = `Command \`${command.command}\` ${results.status ? 'succeeded' : 'failed'} with status code ${command.exitCode}\n---\n${command.all ?? '<empty>'}`
-    return results;
-}
+function getStatusForCommand(command: ExecaError | ExecaResult): void {
+    if (command.exitCode === 0) {
+        return;
+    }
 
-export type MinifierReturnStatus = {
-    status: boolean;
-    message: string;
+    throw new Error(`Command \`${command.command}\` failed with status code ${command.exitCode}\n---\n${command.all ?? '<empty>'}`);
 }
 
 const binPaths = {
@@ -29,43 +23,32 @@ const binPaths = {
     nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
 };
 
+const configPath = path.join(repoRootPath, 'minifiers', 'config');
+
+/**
+ * Minify Windows and Legacy newlines into modern Linux newlines
+ */
+async function preminifyNewlines(file: string): Promise<void> {
+    const content = (await fs.readFile(file, 'utf8'))
+        .replaceAll('\n\r', '\n')
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n');
+    await fs.writeFile(file, content, 'utf8');
+}
+
 /**
  * Remove trailing whitespace and multiple joined newlines
  */
-async function minifyPlainText(file: string): Promise<MinifierReturnStatus> {
-    try {
-        const content = (await fs.readFile(file, 'utf8'))
-            .split('\n').map((line) => line.replaceAll(/\s+$/g, '')).join('\n')
-            .replaceAll(/\n\n\n+/gs, '\n\n')
-            .replace(/\n\n$/s, '\n');
-        await fs.writeFile(file, content, 'utf8');
-        return {
-            status: true,
-            message: '',
-        };
-    } catch (error) {
-        return {
-            status: false,
-            message: `${error}`,
-        };
-    }
+async function minifyPlainText(file: string): Promise<void> {
+    const content = (await fs.readFile(file, 'utf8'))
+        .split('\n').map((line) => line.replaceAll(/\s+$/g, '')).join('\n')
+        .replaceAll(/\n\n\n+/gs, '\n\n')
+        .replace(/\n\n$/s, '\n');
+    await fs.writeFile(file, content, 'utf8');
 }
 
-// MARK: - Config files
-
-async function minifyYaml(file: string): Promise<MinifierReturnStatus> {
-    try {
-        await minifyYamlCustom(file);
-        return {
-            status: true,
-            message: '',
-        };
-    } catch (error) {
-        return {
-            status: false,
-            message: `${error}`,
-        };
-    }
+async function minifyYaml(file: string): Promise<void> {
+    await minifyYamlCustom(file);
 
     // function getYamlPreambleVersion(yamlContent: string): '1.1' | '1.2' | undefined {
     //     const firstLine = yamlContent.split('\n')[0].trim();
@@ -110,7 +93,8 @@ async function minifyYaml(file: string): Promise<MinifierReturnStatus> {
     // return [true, command.all ?? '<empty>'];
 }
 
-async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
+
+async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<void> {
     const extraArgs = {
         safe: [],
         default: ['--collapse-whitespace-in-texts'],
@@ -124,7 +108,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     return getStatusForCommand(command);
 }
 
-async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<MinifierReturnStatus> {
+async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<void> {
     const filepath = path.resolve(file);
     const extraArgs = {
         safe: [],
@@ -150,8 +134,8 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
     return status;
 }
 
-async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
-    const command = await execa(['terser', '--no-rename', file, '--output', file], {
+async function minifyJavaScript(file: string): Promise<void> {
+    const command = await execa(['terser', '--no-rename', file, '--output', file, '--config-file', path.join(configPath, 'terser.default.config.json')], {
         env: {
             PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         }
@@ -160,20 +144,8 @@ async function minifyJavaScript(file: string): Promise<MinifierReturnStatus> {
     return getStatusForCommand(command);
 }
 
-async function minifyShell(file: string): Promise<MinifierReturnStatus> {
-    try {
-        await minifyShellCustom(file);
-    } catch (error) {
-        return {
-            status: false,
-            message: error instanceof Error ? error.message : `${error}`,
-        };
-    }
-
-    return {
-        status: true,
-        message: '',
-    };
+async function minifyShell(file: string): Promise<void> {
+    await minifyShellCustom(file);
 }
 
 export async function minifyFile(file: string, options: { preset: 'safe' | 'default' | 'brute' }) {
@@ -226,46 +198,53 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
     const originalContent = await fs.readFile(file);
     log.debug(`Minifying ${filetype} file: ${file}`);
 
-    const minifyStatus: MinifierReturnStatus = await (async () => {
-        switch (filetype) {
-            case 'YAML': {
-                return minifyYaml(file);
+    await preminifyNewlines(file);
+
+    const minifyStatus: Error | undefined = await (async () => {
+        try {
+            switch (filetype) {
+                case 'YAML': {
+                    await minifyYaml(file);
+                    break;
+                }
+                case 'XML': {
+                    await minifyXml(file, options.preset);
+                    break;
+                }
+                case 'Text': {
+                    await minifyPlainText(file);
+                    break;
+                }
+                case 'Markdown': {
+                    await minifyPlainText(file);
+                    break;
+                }
+                case 'JavaScript': {
+                    await minifyJavaScript(file);
+                    break;
+                }
+                case 'Python': {
+                    await minifyPython(file, options.preset);
+                    break;
+                }
+                case 'Shell': {
+                    await minifyShell(file);
+                    break;
+                }
             }
-            case 'XML': {
-                return minifyXml(file, options.preset);
-            }
-            case 'Text': {
-                return minifyPlainText(file);
-            }
-            case 'Markdown': {
-                return minifyPlainText(file);
-            }
-            case 'JavaScript': {
-                return minifyJavaScript(file);
-            }
-            case 'Python': {
-                return minifyPython(file, options.preset);
-            }
-            case 'Shell': {
-                return minifyShell(file);
-            }
-            default: {
-                return { status: true, message: '' };
-            }
+        } catch (error) {
+            return error as Error;
         }
+        return;
     })();
 
-    if (!minifyStatus.status) {
+    if (minifyStatus) {
         await fs.writeFile(file, originalContent);
         throw new Error(`There was error minifying ${file}:\n${minifyStatus.message}`);
     }
 
     const afterSize = (await fs.stat(file)).size;
-    if (afterSize == originalSize) {
-        await fs.writeFile(file, originalContent);
-        log.debug(`File ${file} was not minified, size unchanged`);
-        return;
-    } else if (afterSize > originalSize) {
+    if (afterSize > originalSize) {
         await fs.writeFile(file, originalContent);
         log.debug(`File ${file} was not minified, size increased by +${((afterSize / originalSize) * 100 - 100).toFixed(2)}% / +${formatBytes(afterSize - originalSize)}`);
         return;
