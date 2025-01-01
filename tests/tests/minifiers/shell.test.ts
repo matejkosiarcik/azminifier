@@ -49,31 +49,19 @@ test.describe('Minify Bash', () => {
             name: 'simple document with shebang',
         },
         {
-            input: 'echo   123  abc',
+            input: 'echo   123  abc  ',
             output: 'echo 123 abc',
             name: 'simple document with multiple arguments',
         },
-        // {
-        //     input: 'echo 123;',
-        //     output: 'echo 123',
-        //     name: 'simple document with semicolon',
-        // },
+        {
+            input: 'echo 123;',
+            output: 'echo 123',
+            name: 'simple document with semicolon',
+        },
     ];
     for (const scenario of scenarios) {
         test(`Minify ${scenario.name}`, async () => {
             await performTest(scenario.input, scenario.output);
         });
     }
-
-    // test(`Minify simple document`, async () => {
-    //     await performTest('echo   123', 'echo 123');
-    // });
-
-    // test(`Minify simple document with shebang`, async () => {
-    //     await performTest('#!/bin/sh\necho   123', '#!/bin/sh\necho 123');
-    // });
-
-    // test(`Minify simple document with multiple arguments`, async () => {
-    //     await performTest('echo  123   abc  ', 'echo 123 abc');
-    // });
 });
