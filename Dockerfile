@@ -393,6 +393,12 @@ WORKDIR /app/minifiers
 COPY --from=minifiers--nodejs--final /app/ ./
 COPY --from=minifiers--python--final /app/ ./
 COPY ./minifiers/config/terser.default.config.json ./config/
+WORKDIR /
+# TODO: Enable once problems are resolved
+# RUN cp -R /app /app-minified && \
+#     azminifier /app-minified && \
+#     rm -rf /app && \
+#     mv /app-minified /app
 
 ### Final stage ###
 
