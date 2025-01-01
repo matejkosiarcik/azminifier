@@ -67,19 +67,19 @@ test.describe('Minify JavaScript', () => {
     const newlineDocuments = [
         {
             input: 'console.log(1)\nconsole.log(2)\n',
-            output: 'console.log(1);console.log(2);',
+            output: 'console.log(1),console.log(2);',
         },
         {
-            input: 'console.log(1)\rconsole.log(2)',
-            output: 'console.log(1);console.log(2);',
+            input: 'console.log(1)\rconsole.log(2)\r',
+            output: 'console.log(1),console.log(2);',
         },
         {
-            input: 'console.log(1)\r\nconsole.log(2)',
-            output: 'console.log(1);console.log(2);',
+            input: 'console.log(1)\r\nconsole.log(2)\r\n',
+            output: 'console.log(1),console.log(2);',
         },
         {
-            input: 'console.log(1)\n\rconsole.log(2)',
-            output: 'console.log(1);console.log(2);',
+            input: 'console.log(1)\n\rconsole.log(2)\n\r',
+            output: 'console.log(1),console.log(2);',
         },
     ];
     for (const [index, variant] of newlineDocuments.entries()) {

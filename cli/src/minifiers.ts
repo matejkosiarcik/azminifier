@@ -238,6 +238,8 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
     const originalContent = await fs.readFile(file);
     log.debug(`Minifying ${filetype} file: ${file}`);
 
+    await preminifyNewlines(file);
+
     const minifyStatus: MinifierReturnStatus = await (async () => {
         switch (filetype) {
             case 'YAML': {
@@ -273,11 +275,7 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
     }
 
     const afterSize = (await fs.stat(file)).size;
-    if (afterSize == originalSize) {
-        await fs.writeFile(file, originalContent);
-        log.debug(`File ${file} was not minified, size unchanged`);
-        return;
-    } else if (afterSize > originalSize) {
+    if (afterSize > originalSize) {
         await fs.writeFile(file, originalContent);
         log.debug(`File ${file} was not minified, size increased by +${((afterSize / originalSize) * 100 - 100).toFixed(2)}% / +${formatBytes(afterSize - originalSize)}`);
         return;
