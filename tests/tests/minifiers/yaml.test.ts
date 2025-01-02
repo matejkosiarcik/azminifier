@@ -154,6 +154,10 @@ test.describe('Minify YAML', () => {
             });
 
             if (!['false', 'true'].includes(input.toLowerCase())) {
+                test(`Test minifying booleans ${variant.name} - "${input}"`, async () => {
+                    await performTest(`${input} `, input);
+                });
+
                 test(`Test minifying booleans ${variant.name} - "${input}" - YAML 1.2`, async () => {
                     await performTest(`${yaml12VersionPrefix}${input} `, `${yaml12VersionPrefix}${input}`);
                 });
