@@ -35,6 +35,7 @@ test.describe('Minify Bash', () => {
     test(`Minify shebang`, async () => {
         await performTest('#!/usr/bin/env  bash', '#!/usr/bin/env bash');
         await performTest('#!/bin/bash  -e', '#!/bin/bash -e');
+        await performTest('#!/usr/bin/env   zsh  ', '#!/usr/bin/env zsh');
     });
 
     const scenarios = [
