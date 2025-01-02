@@ -1,6 +1,6 @@
-# Unnecessary minifier
+# AZMinifier
 
-> Unnecessary minifier for text files
+> AZMinifier for text files
 
 <details>
 <summary>Table of contents</summary>
