@@ -405,6 +405,16 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor
 
+# Shell #
+
+FROM debian:12.8-slim AS minifiers--shell--final
+WORKDIR /app
+COPY ./minifiers/shell/ ./shell/
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--buildplatform--final
+WORKDIR /app
+COPY ./minifiers/shell/ ./shell/
+
 # Pre-Final #
 # The purpose of this stage is to be 99% the same as the final stage
 # Mainly the apt install scripts should be the same
@@ -424,6 +434,7 @@ COPY ./VERSION.txt /app/
 COPY --from=cli--buildplatform--final /app/ /app/
 COPY --from=minifiers--nodejs--buildplatform--final /app/ /app/minifiers/
 COPY --from=minifiers--python--buildplatform--final /app/ /app/minifiers/
+COPY --from=minifiers--shell--buildplatform--final /app/ /app/minifiers/
 COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.cjs /app/minifiers/config/
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--minified
@@ -459,6 +470,17 @@ COPY --from=minified--helper /app/ /app/
 COPY --from=minifiers--python--final /app/ /app-minified/
 RUN azminifier /app-minified
 
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app/ /app/
+COPY --from=minifiers--shell--final /app/ /app-minified/
+RUN azminifier /app-minified
+
 FROM debian:12.8-slim AS prefinal
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -472,6 +494,7 @@ COPY ./VERSION.txt /app/
 COPY --from=cli--minified /app-minified/ /app/
 COPY --from=minifiers--nodejs--minified /app-minified/ /app/minifiers/
 COPY --from=minifiers--python--minified /app-minified/ /app/minifiers/
+COPY --from=minifiers--shell--minified /app-minified/ /app/minifiers/
 COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.cjs /app/minifiers/config/
 
 ### Final stage ###
