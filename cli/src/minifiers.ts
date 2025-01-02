@@ -65,7 +65,16 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
             PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
         },
     });
-    return getStatusForCommand(command);
+    getStatusForCommand(command);
+}
+
+async function minifySvg(file: string): Promise<void> {
+    const command = await execa(['svgo', '--input', file, '--output', file, '--config', path.join(configPath, 'svgo.default.config.cjs')], {
+        env: {
+            PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
+        },
+    });
+    getStatusForCommand(command);
 }
 
 async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): Promise<void> {
@@ -83,15 +92,13 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
         },
     });
 
-    const status = getStatusForCommand(command);
+    getStatusForCommand(command);
 
     const newFileContent = (await fs.readFile(filepath, 'utf8'))
         .replaceAll('\r\n', '\n')
         .replace(/#.+?\n$/g, '')
         .replace(/[\n\r]+$/, '');
     await fs.writeFile(filepath, newFileContent, 'utf8');
-
-    return status;
 }
 
 async function minifyJavaScript(file: string): Promise<void> {
@@ -101,7 +108,7 @@ async function minifyJavaScript(file: string): Promise<void> {
         }
     });
 
-    return getStatusForCommand(command);
+    getStatusForCommand(command);
 }
 
 async function minifyShell(file: string): Promise<void> {
@@ -135,6 +142,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             }
             case 'py': {
                 return 'Python' as const;
+            }
+            case 'svg': {
+                return 'SVG' as const;
             }
             case 'bash':
             case 'sh':
@@ -189,6 +199,10 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
                 }
                 case 'Shell': {
                     await minifyShell(file);
+                    break;
+                }
+                case 'SVG': {
+                    await minifySvg(file);
                     break;
                 }
             }
