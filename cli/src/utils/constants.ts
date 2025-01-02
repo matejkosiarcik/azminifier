@@ -3,7 +3,7 @@ import * as url from 'node:url';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const repoRootPath = (() => {
-    const initialRepoPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
+    const initialRepoPath = path.dirname(path.dirname(path.dirname(path.dirname(path.resolve(__filename)))));
     return initialRepoPath === '/' ? '/app' : initialRepoPath;
 })();
 
