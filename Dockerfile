@@ -424,7 +424,7 @@ COPY ./VERSION.txt /app/
 COPY --from=cli--buildplatform--final /app/ /app/
 COPY --from=minifiers--nodejs--buildplatform--final /app/ /app/minifiers/
 COPY --from=minifiers--python--buildplatform--final /app/ /app/minifiers/
-COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
+COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.js /app/minifiers/config/
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--minified
 RUN apt-get update -qq && \
@@ -472,7 +472,7 @@ COPY ./VERSION.txt /app/
 COPY --from=cli--minified /app-minified/ /app/
 COPY --from=minifiers--nodejs--minified /app-minified/ /app/minifiers/
 COPY --from=minifiers--python--minified /app-minified/ /app/minifiers/
-COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
+COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.js /app/minifiers/config/
 
 ### Final stage ###
 
