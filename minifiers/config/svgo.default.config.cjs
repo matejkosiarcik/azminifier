@@ -1,3 +1,3 @@
 module.exports = {
-  multipass: true,
+    multipass: true,
 };
