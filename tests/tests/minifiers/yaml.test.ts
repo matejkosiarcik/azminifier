@@ -147,14 +147,14 @@ test.describe('Minify YAML', () => {
             output: 'n',
         },
     ];
-    for (const testType of booleanTestsForAllBooleans) {
-        for (const input of testType.inputs) {
-            test(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.1`, async () => {
-                await performTest(`${yaml11VersionPrefix}${input} `, `${yaml11VersionPrefix}${testType.output}`);
+    for (const variant of booleanTestsForAllBooleans) {
+        for (const input of variant.inputs) {
+            test(`Test minifying booleans ${variant.name} - "${input}" - YAML 1.1`, async () => {
+                await performTest(`${yaml11VersionPrefix}${input} `, `${yaml11VersionPrefix}${variant.output}`);
             });
 
             if (!['false', 'true'].includes(input.toLowerCase())) {
-                test(`Test minifying booleans ${testType.name} - "${input}" - YAML 1.2`, async () => {
+                test(`Test minifying booleans ${variant.name} - "${input}" - YAML 1.2`, async () => {
                     await performTest(`${yaml12VersionPrefix}${input} `, `${yaml12VersionPrefix}${input}`);
                 });
             }
