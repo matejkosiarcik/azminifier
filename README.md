@@ -11,6 +11,20 @@
 
 </details>
 
+Project links:
+
+- GitHub: <https://github.com/matejkosiarcik/azminifier>
+- DockerHub: <https://hub.docker.com/r/matejkosiarcik/azminifier>
+
+| Platform  | Latest version                    |
+|-----------|-----------------------------------|
+| GitHub    | ![github release] <br> ![git tag] |
+| DockerHub | ![dockerhub tag]                  |
+
+[github release]: https://img.shields.io/github/v/release/matejkosiarcik/azminifier?sort=semver&style=flat-square&logo=github&logoColor=white&label=release
+[git tag]: https://img.shields.io/github/v/tag/matejkosiarcik/azminifier?sort=semver&style=flat-square&logo=git&logoColor=white&label=git%20tag
+[dockerhub tag]: https://img.shields.io/docker/v/matejkosiarcik/azminifier?sort=semver&style=flat-square&logo=docker&logoColor=white&label=image%20tag
+
 ## About
 
 This project is in early stage of development.
