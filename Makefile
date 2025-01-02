@@ -23,11 +23,12 @@ bootstrap:
 	true ; done
 
 	# Python
-	printf 'minifiers ' | tr ' ' '\n' | while read -r dir; do \
-		cd "$(PROJECT_DIR)/$$dir" && \
-		PIP_DISABLE_PIP_VERSION_CHECK=1 \
-			python3 -m pip install --requirement requirements.txt --target "$$PWD/python-vendor" --quiet --upgrade && \
-	true ; done
+	cd "$(PROJECT_DIR)/minifiers" && \
+	PIP_DISABLE_PIP_VERSION_CHECK=1 \
+		python3 -m pip install --requirement requirements.txt --target "$$PWD/python-vendor" --quiet --upgrade && \
+		cp "$(PROJECT_DIR)/minifiers/python-patches/minification.py.patch" "$(PROJECT_DIR)/minifiers/python-vendor/pyminifier" && \
+		cd "$(PROJECT_DIR)/minifiers/python-vendor/pyminifier" && \
+		patch <minification.py.patch
 
 	# Gitman package
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman" && \

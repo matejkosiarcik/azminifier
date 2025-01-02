@@ -329,7 +329,7 @@ FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils python3 python3-pip \
+        git jq moreutils python3 python3-pip \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY ./minifiers/requirements.txt ./
@@ -337,6 +337,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target "$PWD/python-vendor" --quiet && \
     find /app/python-vendor -type f -iname '*.py[co]' -delete && \
     find /app/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
+WORKDIR /app/python-vendor/pyminifier
+COPY ./minifiers/python-patches/minification.py.patch ./
+RUN git apply minification.py.patch
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build2
 WORKDIR /app
@@ -438,7 +441,7 @@ RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
 COPY --from=cli--minified /app-minified/ /app/
 COPY --from=minifiers--nodejs--minified /app-minified/ /app/minifiers/
-COPY --from=minifiers--python--final /app/ /app/minifiers/
+COPY --from=minifiers--python--minified /app-minified/ /app/minifiers/
 COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
 
 ### Final stage ###

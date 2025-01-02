@@ -1,0 +1,13 @@
+diff --git a/minification.py b/minification.py
+index 460907f..8047d5a 100644
+--- a/minification.py
++++ b/minification.py
+@@ -228,7 +228,7 @@ def reduce_operators(source):
+                 # mixed strings using both single quotes and double quotes.
+                 out += "'''" + new_string + "'''"
+                 joining_strings = False
+-            if token_string == "@":  # Decorators need special handling
++            if token_string in ('@', '('):  # Decorators and tuple assignment need special handling
+                 if prev_tok and prev_tok[0] == tokenize.NEWLINE:
+                     # Ensure it gets indented properly
+                     out += (" " * (start_col - last_col))
