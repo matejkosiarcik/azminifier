@@ -1,17 +1,11 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import * as url from 'node:url';
 import { execa, formatBytes } from './utils/utils.ts';
 import { ExecaError, Result as ExecaResult } from 'execa';
 import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { minifyShellCustom } from './custom-minifiers/shell.ts';
-
-const __filename = url.fileURLToPath(import.meta.url);
-const repoRootPath = (() => {
-    const initialRepoPath = path.dirname(path.dirname(path.dirname(path.resolve(__filename))));
-    return initialRepoPath === '/' ? '/app' : initialRepoPath;
-})();
+import { paths } from './utils/constants.ts';
 
 function getStatusForCommand(command: ExecaError | ExecaResult): void {
     if (command.exitCode === 0) {
@@ -20,13 +14,6 @@ function getStatusForCommand(command: ExecaError | ExecaResult): void {
 
     throw new Error(`Command \`${command.command}\` failed with status code ${command.exitCode}\n---\n${command.all ?? '<empty>'}`);
 }
-
-const binPaths = {
-    python: path.join(repoRootPath, 'minifiers', 'python-vendor', 'bin'),
-    nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
-};
-
-const configPath = path.join(repoRootPath, 'minifiers', 'config');
 
 /**
  * Minify Windows and Legacy newlines into modern Linux newlines
@@ -62,16 +49,16 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     }[level];
     const command = await execa(['minify-xml', file, '--in-place', ...extraArgs], {
         env: {
-            PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
+            PATH: `${paths.bin.nodeJs}${path.delimiter}${process.env['PATH']}`
         },
     });
     getStatusForCommand(command);
 }
 
 async function minifySvg(file: string): Promise<void> {
-    const command = await execa(['svgo', '--input', file, '--output', file, '--config', path.join(configPath, 'svgo.default.config.cjs')], {
+    const command = await execa(['svgo', '--input', file, '--output', file, '--config', path.join(paths.config, 'svgo.default.config.cjs')], {
         env: {
-            PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
+            PATH: `${paths.bin.nodeJs}${path.delimiter}${process.env['PATH']}`
         },
     });
     getStatusForCommand(command);
@@ -87,8 +74,8 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
 
     const command = await execa(['pyminifier', ...extraArgs, `--outfile=${file}`, file], {
         env: {
-            PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
-            PYTHONPATH: path.dirname(binPaths.python),
+            PATH: `${paths.bin.python}${path.delimiter}${process.env['PATH']}`,
+            PYTHONPATH: path.dirname(paths.bin.python),
         },
     });
 
@@ -102,9 +89,9 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
 }
 
 async function minifyJavaScript(file: string): Promise<void> {
-    const command = await execa(['terser', '--no-rename', file, '--output', file, '--config-file', path.join(configPath, 'terser.default.config.json')], {
+    const command = await execa(['terser', '--no-rename', file, '--output', file, '--config-file', path.join(paths.config, 'terser.default.config.json')], {
         env: {
-            PATH: `${binPaths.nodeJs}${path.delimiter}${process.env['PATH']}`
+            PATH: `${paths.bin.nodeJs}${path.delimiter}${process.env['PATH']}`
         }
     });
 
