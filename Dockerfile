@@ -274,6 +274,17 @@ COPY --from=cli--build /app/dist/ ./dist/
 COPY ./docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
 RUN chronic sh /utils/check-minifiers-custom.sh
 
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--buildplatform--final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils nodejs npm \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=cli--build /app/node_modules ./node_modules
+COPY --from=cli--build /app/package.json ./package.json
+COPY --from=cli--build /app/dist/ ./dist/
+
 ### 3rd party minifiers ###
 
 # NodeJS #
@@ -322,6 +333,16 @@ COPY --from=minifiers--nodejs--build2 /app/package.json ./package.json
 COPY ./docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
 ENV PATH="/app/node_modules/.bin:$PATH"
 RUN chronic sh /utils/check-minifiers-nodejs.sh
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--buildplatform--final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils nodejs \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minifiers--nodejs--build2 /app/node_modules ./node_modules/
+COPY --from=minifiers--nodejs--build2 /app/package.json ./package.json
 
 # Python #
 
@@ -375,12 +396,21 @@ ENV PATH="/app/python-vendor/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1
 RUN chronic sh /utils/check-minifiers-python.sh
 
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--buildplatform--final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor
+
 # Pre-Final #
 # The purpose of this stage is to be 99% the same as the final stage
 # Mainly the apt install scripts should be the same
 # But since it's not actually final we can run some sanity-checks, which fo not baloon the size of the output docker image
 
-FROM debian:12.8-slim AS minified--helper
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minified--helper
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
@@ -391,12 +421,12 @@ RUN apt-get update -qq && \
 COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
-COPY --from=cli--final /app/ /app/
-COPY --from=minifiers--nodejs--final /app/ /app/minifiers/
-COPY --from=minifiers--python--final /app/ /app/minifiers/
+COPY --from=cli--buildplatform--final /app/ /app/
+COPY --from=minifiers--nodejs--buildplatform--final /app/ /app/minifiers/
+COPY --from=minifiers--python--buildplatform--final /app/ /app/minifiers/
 COPY ./minifiers/config/terser.default.config.json /app/minifiers/config/
 
-FROM debian:12.8-slim AS cli--minified
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
@@ -407,7 +437,7 @@ COPY --from=minified--helper /app/ /app/
 COPY --from=cli--final /app/ /app-minified/
 RUN azminifier /app-minified
 
-FROM debian:12.8-slim AS minifiers--nodejs--minified
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
@@ -418,7 +448,7 @@ COPY --from=minified--helper /app/ /app/
 COPY --from=minifiers--nodejs--final /app/ /app-minified/
 RUN azminifier /app-minified
 
-FROM debian:12.8-slim AS minifiers--python--minified
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         jq moreutils nodejs python3 \
