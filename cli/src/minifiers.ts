@@ -52,48 +52,6 @@ async function minifyPlainText(file: string): Promise<void> {
 
 async function minifyYaml(file: string): Promise<void> {
     await minifyYamlCustom(file);
-
-    // function getYamlPreambleVersion(yamlContent: string): '1.1' | '1.2' | undefined {
-    //     const firstLine = yamlContent.split('\n')[0].trim();
-    //     if (/^%YAML 1.1\s*$/.test(firstLine)) {
-    //         return '1.1';
-    //     } else if (/^%YAML 1.2\s*$/.test(firstLine)) {
-    //         return '1.2';
-    //     } else {
-    //         return;
-    //     }
-    // }
-
-    // let originalFileContent = await fs.readFile(file, 'utf-8');
-    // const originalYamlPreambleVersion = getYamlPreambleVersion(originalFileContent);
-
-    // let command: ExecaReturnValue<string>;
-    // if (originalFileContent !== '') {
-    //     command = await customExeca(['yq', '--yaml-output', '--in-place', '.', file], {
-    //         env: {
-    //             PATH: `${binPaths.python}${path.delimiter}${process.env['PATH']}`,
-    //             PYTHONPATH: path.dirname(binPaths.python),
-    //             PYTHONDONTWRITEBYTECODE: '1',
-    //         }
-    //     });
-    //     if (command.exitCode !== 0) {
-    //         return [false, command.all ?? '<empty>'];
-    //     }
-    // } else {
-    //     return [true, ''];
-    // }
-
-    // // NOTE: Post-Process file
-    // // - Add preamble if there was one before minifying
-    // // - Remove trailing "..."
-    // let fileContent = await fs.readFile(file, 'utf-8');
-    // if (originalYamlPreambleVersion) {
-    //     fileContent = `%YAML ${originalYamlPreambleVersion}\n---\n${fileContent}`;
-    // }
-    // fileContent = fileContent.replace(/[\s\n]*\.{3}[\s\n]*^/, '');
-    // await fs.writeFile(file, fileContent, 'utf-8');
-
-    // return [true, command.all ?? '<empty>'];
 }
 
 async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Promise<void> {
