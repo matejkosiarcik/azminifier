@@ -360,7 +360,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     find /app/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
 WORKDIR /app/python-vendor/pyminifier
 COPY ./minifiers/python-patches/minification.py.patch ./
-RUN git apply minification.py.patch
+RUN git apply minification.py.patch && \
+    rm -f minification.py.patch
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build2
 WORKDIR /app
