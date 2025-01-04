@@ -409,12 +409,10 @@ COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor
 # Shell #
 
 FROM debian:12.8-slim AS minifiers--shell--final
-WORKDIR /app
-COPY ./minifiers/shell/ ./shell/
+COPY ./minifiers/shell /app/shell
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--buildplatform--final
-WORKDIR /app
-COPY ./minifiers/shell/ ./shell/
+COPY ./minifiers/shell /app/shell
 
 # Pre-Final #
 # The purpose of this stage is to be 99% the same as the final stage
@@ -447,7 +445,7 @@ RUN apt-get update -qq && \
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY --from=minified--helper /app/ /app/
 COPY --from=cli--final /app/ /app-minified/
-RUN azminifier /app-minified
+RUN chronic azminifier /app-minified
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--minified
 RUN apt-get update -qq && \
@@ -458,7 +456,7 @@ RUN apt-get update -qq && \
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY --from=minified--helper /app/ /app/
 COPY --from=minifiers--nodejs--final /app/ /app-minified/
-RUN azminifier /app-minified
+RUN chronic azminifier /app-minified
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--minified
 RUN apt-get update -qq && \
@@ -469,7 +467,7 @@ RUN apt-get update -qq && \
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY --from=minified--helper /app/ /app/
 COPY --from=minifiers--python--final /app/ /app-minified/
-RUN azminifier /app-minified
+RUN chronic azminifier /app-minified
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--minified
 RUN apt-get update -qq && \
@@ -480,7 +478,7 @@ RUN apt-get update -qq && \
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY --from=minified--helper /app/ /app/
 COPY --from=minifiers--shell--final /app/ /app-minified/
-RUN azminifier /app-minified
+RUN chronic azminifier /app-minified
 
 FROM debian:12.8-slim AS prefinal
 RUN apt-get update -qq && \
