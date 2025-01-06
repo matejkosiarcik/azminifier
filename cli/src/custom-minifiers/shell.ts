@@ -72,7 +72,7 @@ export async function minifyShellCustom(shellFile: string) {
     if (mode === 'sh' && shebang?.endsWith('zsh')) {
         executable = 'zsh';
     }
-    const scriptFilePath = path.join(paths.minifierDirs.shell, `minify-${mode}.${mode === 'zsh' ? 'zsh-mask' : 'sh'}`);
+    const scriptFilePath = path.join(paths.minifiers.shell, `minify-${mode}.${mode === 'zsh' ? 'zsh-mask' : 'sh'}`);
 
     const minifiedFileCommand = await execa([executable, scriptFilePath, shellFile]);
 

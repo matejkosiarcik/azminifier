@@ -32,6 +32,13 @@ bootstrap:
 
 	gem install bundler
 
+	BUNDLE_DISABLE_SHARED_GEMS=true \
+	BUNDLE_FROZEN=true \
+	BUNDLE_GEMFILE="$(PROJECT_DIR)/minifiers/Gemfile" \
+	BUNDLE_PATH="$(PROJECT_DIR)/minifiers/bundle" \
+	BUNDLE_PATH__SYSTEM=false \
+		bundle install --quiet
+
 	# Gitman package
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman" && \
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \

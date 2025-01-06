@@ -233,9 +233,61 @@ ENV PATH="/app/.node/bin:$PATH"
 RUN chronic node --version && \
     chronic npm --version
 
-# Python ##
+## Python ##
 
-# Ruby ##
+## Ruby runtime - rbenv ##
+
+# Rbenv installer
+FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--ruby--rbenv--gitman
+WORKDIR /app
+COPY ./docker-utils/dependencies/gitman/rbenv-installer/gitman.yml ./
+RUN --mount=type=cache,target=/root/.gitcache \
+    gitman install --quiet && \
+    find . -type d -name .git -prune -exec rm -rf {} \;
+
+# Install ruby with rbenv
+FROM debian:12.8-slim AS runtime--ruby--rbenv--final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        autoconf bison build-essential ca-certificates curl git moreutils \
+        libffi-dev libgdbm-dev libncurses5-dev libreadline-dev libreadline-dev libssl-dev libyaml-dev zlib1g-dev >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=runtime--ruby--rbenv--gitman /app/gitman-repositories/rbenv-installer ./rbenv-installer
+ENV PATH="$PATH:/root/.rbenv/bin:/.rbenv/bin:/.rbenv/shims" \
+    RBENV_ROOT=/.rbenv
+RUN bash rbenv-installer/bin/rbenv-installer
+COPY ./docker-utils/build/rbenv-install-logging.sh /utils/
+COPY ./.ruby-version ./
+# hadolint ignore=DL3001
+RUN --mount=type=cache,target=/.rbenv/cache \
+    ruby_version="$(cat .ruby-version)" && \
+    (sh '/utils/rbenv-install-logging.sh' &) && \
+    chronic rbenv install "$ruby_version" && \
+    kill "$(cat '/utils/logging-pid.txt')" && \
+    ln -s "/.rbenv/versions/$ruby_version" /.rbenv/versions/current
+
+# Install ruby with rbenv
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS runtime--ruby--rbenv--buildplatform--final
+WORKDIR /app
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        autoconf bison build-essential ca-certificates curl git moreutils \
+        libffi-dev libgdbm-dev libncurses5-dev libreadline-dev libreadline-dev libssl-dev libyaml-dev zlib1g-dev >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=runtime--ruby--rbenv--gitman /app/gitman-repositories/rbenv-installer ./rbenv-installer
+ENV PATH="$PATH:/root/.rbenv/bin:/.rbenv/bin:/.rbenv/shims" \
+    RBENV_ROOT=/.rbenv
+RUN bash rbenv-installer/bin/rbenv-installer
+COPY ./docker-utils/build/rbenv-install-logging.sh /utils/
+COPY ./.ruby-version ./
+# hadolint ignore=DL3001
+RUN --mount=type=cache,target=/.rbenv/cache \
+    ruby_version="$(cat .ruby-version)" && \
+    (sh '/utils/rbenv-install-logging.sh' &) && \
+    chronic rbenv install "$ruby_version" && \
+    kill "$(cat '/utils/logging-pid.txt')" && \
+    ln -s "/.rbenv/versions/$ruby_version" /.rbenv/versions/current
 
 ### Main CLI ###
 
@@ -288,7 +340,7 @@ COPY --from=cli--build /app/dist/ ./dist/
 # NodeJS #
 
 FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS minifiers--nodejs--build1
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils \
@@ -301,16 +353,16 @@ RUN --mount=type=cache,target=/root/.npm \
     npm prune --production --silent --no-progress --no-audit
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--build2
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers--nodejs--build1 /app/node_modules/ ./node_modules/
-COPY --from=minifiers--nodejs--build1 /app/package.json ./package.json
+COPY --from=minifiers--nodejs--build1 /app/minifiers/node_modules/ ./node_modules/
+COPY --from=minifiers--nodejs--build1 /app/minifiers/package.json ./package.json
 COPY ./docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
-ENV PATH="/app/node_modules/.bin:$PATH"
+ENV PATH="/app/minifiers/node_modules/.bin:$PATH"
 # TODO: Reenable
 # RUN touch /usage-list.txt && \
 #     inotifywait --daemon --recursive --event access /app/node_modules --outfile /usage-list.txt --format '%w%f' && \
@@ -320,32 +372,32 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 # RUN sh /utils/prune-inotifylist.sh ./node_modules /usage-list.txt
 
 FROM debian:12.8-slim AS minifiers--nodejs--final
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers--nodejs--build2 /app/node_modules ./node_modules/
-COPY --from=minifiers--nodejs--build2 /app/package.json ./package.json
+COPY --from=minifiers--nodejs--build2 /app/minifiers/node_modules ./node_modules/
+COPY --from=minifiers--nodejs--build2 /app/minifiers/package.json ./package.json
 COPY ./docker-utils/sanity-checks/check-minifiers-nodejs.sh /utils/
-ENV PATH="/app/node_modules/.bin:$PATH"
+ENV PATH="/app/minifiers/node_modules/.bin:$PATH"
 RUN chronic sh /utils/check-minifiers-nodejs.sh
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--buildplatform--final
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers--nodejs--build2 /app/node_modules ./node_modules/
-COPY --from=minifiers--nodejs--build2 /app/package.json ./package.json
+COPY --from=minifiers--nodejs--build2 /app/minifiers/node_modules ./node_modules/
+COPY --from=minifiers--nodejs--build2 /app/minifiers/package.json ./package.json
 
 # Python #
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build1
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         git moreutils python3 python3-pip \
@@ -354,63 +406,106 @@ RUN apt-get update -qq && \
 COPY ./minifiers/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target "$PWD/python-vendor" --quiet && \
-    find /app/python-vendor -type f -iname '*.py[co]' -delete && \
-    find /app/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
-WORKDIR /app/python-vendor/pyminifier
+    find /app/minifiers/python-vendor -type f -iname '*.py[co]' -delete && \
+    find /app/minifiers/python-vendor -type d -iname '__pycache__' -prune -exec rm -rf {} \;
+WORKDIR /app/minifiers/python-vendor/pyminifier
 COPY ./minifiers/python-patches/minification.py.patch ./
 RUN git apply minification.py.patch && \
     rm -f minification.py.patch
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build2
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils python3 inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers--python--build1 /app/python-vendor/ ./python-vendor/
+COPY --from=minifiers--python--build1 /app/minifiers/python-vendor/ ./python-vendor/
 COPY ./docker-utils/sanity-checks/check-minifiers-python.sh /utils/
-ENV PATH="/app/python-vendor/bin:$PATH" \
-    PYTHONPATH=/app/python-vendor \
+ENV PATH="/app/minifiers/python-vendor/bin:$PATH" \
+    PYTHONPATH=/app/minifiers/python-vendor \
     PYTHONDONTWRITEBYTECODE=1
 # TODO: Reenable
 # RUN touch /usage-list.txt && \
-#     inotifywait --daemon --recursive --event access /app/python-vendor --outfile /usage-list.txt --format '%w%f' && \
+#     inotifywait --daemon --recursive --event access /app/minifiers/python-vendor --outfile /usage-list.txt --format '%w%f' && \
 #     chronic sh /utils/check-minifiers-python.sh && \
 #     killall inotifywait
 # COPY ./docker-utils/prune-dependencies/prune-inotifylist.sh /utils/prune-inotifylist.sh
 # RUN sh /utils/prune-inotifylist.sh ./python-vendor /usage-list.txt
 
 FROM debian:12.8-slim AS minifiers--python--final
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor/
+COPY --from=minifiers--python--build2 /app/minifiers/python-vendor ./python-vendor/
 COPY ./docker-utils/sanity-checks/check-minifiers-python.sh /utils/
-ENV PATH="/app/python-vendor/bin:$PATH" \
-    PYTHONPATH=/app/python-vendor \
+ENV PATH="/app/minifiers/python-vendor/bin:$PATH" \
+    PYTHONPATH=/app/minifiers/python-vendor \
     PYTHONDONTWRITEBYTECODE=1
 RUN chronic sh /utils/check-minifiers-python.sh
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--buildplatform--final
-WORKDIR /app
+WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor
+COPY --from=minifiers--python--build2 /app/minifiers/python-vendor ./python-vendor
+
+# Ruby #
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--ruby--build
+WORKDIR /app/minifiers
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        build-essential libyaml-0-2 moreutils >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY ./minifiers/Gemfile ./minifiers/Gemfile.lock ./
+COPY --from=runtime--ruby--rbenv--buildplatform--final /.rbenv/versions /.rbenv/versions
+ENV BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_FROZEN=true \
+    BUNDLE_GEMFILE=/app/minifiers/Gemfile \
+    BUNDLE_PATH=/app/minifiers/bundle \
+    BUNDLE_PATH__SYSTEM=false \
+    PATH="/.rbenv/versions/current/bin:$PATH"
+RUN chronic bundle install --quiet
+
+FROM debian:12.8-slim AS minifiers--ruby--final
+WORKDIR /app/minifiers
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY ./minifiers/Gemfile ./minifiers/Gemfile.lock ./
+COPY --from=runtime--ruby--rbenv--final /.rbenv/versions /.rbenv/versions
+COPY --from=minifiers--ruby--build /app/minifiers/bundle ./bundle
+COPY ./docker-utils/sanity-checks/check-minifiers-ruby.sh /utils/
+ENV BUNDLE_GEMFILE=/app/minifiers/Gemfile \
+    BUNDLE_PATH=/app/minifiers/bundle \
+    PATH="/.rbenv/versions/current/bin:$PATH"
+RUN chronic sh /utils/check-minifiers-ruby.sh
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--ruby--buildplatform--final
+WORKDIR /app/minifiers
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        moreutils >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY ./minifiers/Gemfile ./minifiers/Gemfile.lock ./
+COPY --from=runtime--ruby--rbenv--buildplatform--final /.rbenv/versions /.rbenv/versions
+COPY --from=minifiers--ruby--build /app/minifiers/bundle ./bundle
 
 # Shell #
 
 FROM debian:12.8-slim AS minifiers--shell--final
-COPY ./minifiers/shell /app/shell
+COPY ./minifiers/shell /app/minifiers/shell
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--buildplatform--final
-COPY ./minifiers/shell /app/shell
+COPY ./minifiers/shell /app/minifiers/shell
 
 # Pre-Final #
 # The purpose of this stage is to be 99% the same as the final stage
@@ -429,9 +524,11 @@ COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
 COPY --from=cli--buildplatform--final /app/ /app/
-COPY --from=minifiers--nodejs--buildplatform--final /app/ /app/minifiers/
-COPY --from=minifiers--python--buildplatform--final /app/ /app/minifiers/
-COPY --from=minifiers--shell--buildplatform--final /app/ /app/minifiers/
+COPY --from=minifiers--nodejs--buildplatform--final /app/minifiers /app/minifiers
+COPY --from=minifiers--python--buildplatform--final /app/minifiers /app/minifiers
+COPY --from=minifiers--ruby--buildplatform--final /app/minifiers /app/minifiers
+COPY --from=minifiers--ruby--buildplatform--final /.rbenv /.rbenv
+COPY --from=minifiers--shell--buildplatform--final /app/minifiers /app/minifiers
 COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.cjs /app/minifiers/config/
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--minified
@@ -441,8 +538,21 @@ RUN apt-get update -qq && \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
-COPY --from=minified--helper /app/ /app/
-COPY --from=cli--final /app/ /app-minified/
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY --from=cli--final /app /app-minified
+RUN chronic azminifier /app-minified
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS config--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.cjs /app-minified/minifiers/config/
 RUN chronic azminifier /app-minified
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--minified
@@ -452,8 +562,9 @@ RUN apt-get update -qq && \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
-COPY --from=minified--helper /app/ /app/
-COPY --from=minifiers--nodejs--final /app/ /app-minified/
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY --from=minifiers--nodejs--final /app/minifiers/ /app-minified/minifiers/
 RUN chronic azminifier /app-minified
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--minified
@@ -463,8 +574,21 @@ RUN apt-get update -qq && \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
-COPY --from=minified--helper /app/ /app/
-COPY --from=minifiers--python--final /app/ /app-minified/
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY --from=minifiers--python--final /app/minifiers/ /app-minified/minifiers/
+RUN chronic azminifier /app-minified
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--ruby--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 build-essential libyaml-0-2 libyaml-dev moreutils \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY --from=minifiers--ruby--final /app/minifiers/ /app-minified/minifiers/
 RUN chronic azminifier /app-minified
 
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--minified
@@ -474,9 +598,23 @@ RUN apt-get update -qq && \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
-COPY --from=minified--helper /app/ /app/
-COPY --from=minifiers--shell--final /app/ /app-minified/
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY --from=minifiers--shell--final /app/minifiers/ /app-minified/minifiers/
 RUN chronic azminifier /app-minified
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS runtime--ruby--rbenv--minified
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        jq moreutils nodejs python3 \
+        >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
+COPY --from=minified--helper /app /app
+COPY --from=minified--helper /.rbenv /.rbenv
+COPY --from=runtime--ruby--rbenv--final /.rbenv/versions /.rbenv-minified/versions
+# TODO: Enable minification
+# RUN chronic azminifier /.rbenv-minified
 
 FROM debian:12.8-slim AS prefinal
 RUN apt-get update -qq && \
@@ -489,10 +627,12 @@ COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
 COPY --from=cli--minified /app-minified/ /app/
-COPY --from=minifiers--nodejs--minified /app-minified/ /app/minifiers/
-COPY --from=minifiers--python--minified /app-minified/ /app/minifiers/
-COPY --from=minifiers--shell--minified /app-minified/ /app/minifiers/
-COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.cjs /app/minifiers/config/
+COPY --from=config--minified /app-minified/minifiers/config/ /app/minifiers/config/
+COPY --from=minifiers--nodejs--minified /app-minified/minifiers/ /app/minifiers/
+COPY --from=minifiers--python--minified /app-minified/minifiers/ /app/minifiers/
+COPY --from=minifiers--ruby--minified /app-minified/minifiers/ /app/minifiers/
+COPY --from=minifiers--shell--minified /app-minified/minifiers/ /app/minifiers/
+COPY --from=runtime--ruby--rbenv--minified /.rbenv-minified/ /.rbenv/
 
 ### Final stage ###
 
@@ -512,6 +652,7 @@ RUN find / -type f -not -path '/proc/*' -not -path '/sys/*' >/filelist.txt 2>/de
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/azminifier && \
     chmod a+x /usr/bin/azminifier && \
     useradd --create-home --no-log-init --shell /bin/sh --user-group --system azminifier
+COPY --from=runtime--ruby--rbenv--final /.rbenv/versions /.rbenv/versions
 COPY --from=prefinal /app/ /app/
 ENV NODE_OPTIONS=--dns-result-order=ipv4first \
     PYTHONDONTWRITEBYTECODE=1
