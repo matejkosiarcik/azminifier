@@ -55,7 +55,7 @@ Options:
   -v, --verbose  More logging  [boolean]
   -q, --quiet    Less logging  [boolean]
   -n, --dry-run  Dry run - just analyze, does not modify files  [boolean]
-  -j, --jobs     Count of cocurrent jobs to use (when set to "0" will use cpu-threads)  [number] [default: 0]
+  -j, --jobs     Count of concurrent jobs to use (when set to "0" will use cpu-threads)  [number] [default: 0]
 ```
 
 ## Dev dependencies
