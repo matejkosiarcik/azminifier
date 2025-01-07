@@ -458,7 +458,23 @@ COPY --from=minifiers--python--build2 /app/minifiers/python-vendor ./python-vend
 
 # Ruby #
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--ruby--build
+FROM debian:12.8-slim AS minifiers--ruby--build
+WORKDIR /app/minifiers
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
+        build-essential libyaml-0-2 moreutils >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+COPY ./minifiers/Gemfile ./minifiers/Gemfile.lock ./
+COPY --from=runtime--ruby--rbenv--buildplatform--final /.rbenv/versions /.rbenv/versions
+ENV BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_FROZEN=true \
+    BUNDLE_GEMFILE=/app/minifiers/Gemfile \
+    BUNDLE_PATH=/app/minifiers/bundle \
+    BUNDLE_PATH__SYSTEM=false \
+    PATH="/.rbenv/versions/current/bin:$PATH"
+RUN chronic bundle install --quiet
+
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--ruby--buildplatform--build
 WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -497,7 +513,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 COPY ./minifiers/Gemfile ./minifiers/Gemfile.lock ./
 COPY --from=runtime--ruby--rbenv--buildplatform--final /.rbenv/versions /.rbenv/versions
-COPY --from=minifiers--ruby--build /app/minifiers/bundle ./bundle
+COPY --from=minifiers--ruby--buildplatform--build /app/minifiers/bundle ./bundle
 
 # Shell #
 
