@@ -465,7 +465,7 @@ RUN apt-get update -qq && \
         build-essential libyaml-0-2 moreutils >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY ./minifiers/Gemfile ./minifiers/Gemfile.lock ./
-COPY --from=runtime--ruby--rbenv--buildplatform--final /.rbenv/versions /.rbenv/versions
+COPY --from=runtime--ruby--rbenv--final /.rbenv/versions /.rbenv/versions
 ENV BUNDLE_DISABLE_SHARED_GEMS=true \
     BUNDLE_FROZEN=true \
     BUNDLE_GEMFILE=/app/minifiers/Gemfile \
