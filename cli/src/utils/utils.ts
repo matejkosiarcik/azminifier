@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import fsSync from 'fs';
-import { execa as baseExeca, ExecaError, Options as ExecaOptions, Result as ExecaResult } from 'execa';
+import fsSync from 'node:fs';
+import { execa as baseExeca, type ExecaError, type Options as ExecaOptions, type Result as ExecaResult } from 'execa';
 
 export async function findFiles(fspath: string): Promise<string[]> {
     if (!fsSync.existsSync(fspath)) {

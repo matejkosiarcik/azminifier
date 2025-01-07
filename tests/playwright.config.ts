@@ -1,5 +1,5 @@
-import process from 'process';
-import os from 'os';
+import process from 'node:process';
+import os from 'node:os';
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
