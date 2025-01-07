@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import YAML, { ParseOptions as YamlParseOptions, DocumentOptions as YamlDocumentOptions } from 'yaml';
+import YAML, { type ParseOptions as YamlParseOptions, type DocumentOptions as YamlDocumentOptions } from 'yaml';
 
 function getYamlPreambleVersion(yamlContent: string): '1.1' | '1.2' | undefined {
     const firstLine = yamlContent.split('\n')[0].trim();
