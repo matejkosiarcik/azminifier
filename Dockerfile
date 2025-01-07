@@ -348,7 +348,7 @@ FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build1
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        git jq moreutils python3 python3-pip \
+        git moreutils python3 python3-pip \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY ./minifiers/requirements.txt ./
@@ -365,7 +365,7 @@ FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--build2
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils python3 inotify-tools psmisc \
+        moreutils python3 inotify-tools psmisc \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers--python--build1 /app/python-vendor/ ./python-vendor/
@@ -385,7 +385,7 @@ FROM debian:12.8-slim AS minifiers--python--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils python3 \
+        moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor/
@@ -399,7 +399,7 @@ FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--buildplatf
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils python3 \
+        moreutils python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minifiers--python--build2 /app/python-vendor ./python-vendor
@@ -420,7 +420,7 @@ COPY ./minifiers/shell /app/shell
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minified--helper
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils nodejs python3 \
+        moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/* && \
     printf '%s\n%s\n%s\n' '#!/bin/sh' 'set -euf' 'node /app/dist/cli.js $@' >/usr/bin/azminifier && \
@@ -437,7 +437,7 @@ COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.defau
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils nodejs python3 \
+        moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
@@ -448,7 +448,7 @@ RUN chronic azminifier /app-minified
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--nodejs--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils nodejs python3 \
+        moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
@@ -459,7 +459,7 @@ RUN chronic azminifier /app-minified
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--python--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils nodejs python3 \
+        moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
@@ -470,7 +470,7 @@ RUN chronic azminifier /app-minified
 FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--shell--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils nodejs python3 \
+        moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
@@ -481,7 +481,7 @@ RUN chronic azminifier /app-minified
 FROM debian:12.8-slim AS prefinal
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
-        jq moreutils nodejs python3 \
+        moreutils nodejs python3 \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
