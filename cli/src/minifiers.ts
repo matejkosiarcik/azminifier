@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { execa, formatBytes } from './utils/utils.ts';
-import { ExecaError, Result as ExecaResult } from 'execa';
+import { type ExecaError, type Result as ExecaResult } from 'execa';
 import { log } from './utils/log.ts';
 import { minifyYamlCustom } from './custom-minifiers/yaml.ts';
 import { minifyShellCustom } from './custom-minifiers/shell.ts';
