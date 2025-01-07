@@ -62,7 +62,7 @@ Options:
 
 Recommended software:
 
-- `make` - with this you can run tasks such as `make bootstrap/build/clean/test/...`, see `Makefile` for all supported targets)
+- `make` - with this you can run tasks such as `make bootstrap/build/clean/test/…`, see `Makefile` for all supported targets)
 
 For native build:
 
