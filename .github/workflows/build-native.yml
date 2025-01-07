@@ -27,6 +27,11 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1.207.0
+        with:
+          ruby-version: ruby # latest
+
       - name: Install HomeBrew dependencies
         if: ${{ matrix.os == 'macos-latest' }}
         run: brew install bash

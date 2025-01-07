@@ -18,6 +18,8 @@ node_modules/
 python-vendor/
 venv/
 gitman-repositories/
+bundle/
+.bundle/
 
 # Test artifacts
 test-results/
