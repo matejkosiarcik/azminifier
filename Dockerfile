@@ -40,15 +40,13 @@ ENV PATH="/app/python-vendor/bin:$PATH" \
 FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--nodenv--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/nodenv/gitman.yml ./
-RUN --mount=type=cache,target=/root/.gitcache \
-    gitman install --quiet && \
+RUN gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
 FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--node-build--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/node-build/gitman.yml ./
-RUN --mount=type=cache,target=/root/.gitcache \
-    gitman install --quiet && \
+RUN gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
 # TODO: Run on current architecture
