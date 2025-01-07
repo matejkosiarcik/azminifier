@@ -29,7 +29,7 @@ jobs:
 
       - name: Install HomeBrew dependencies
         if: ${{ matrix.os == 'macos-latest' }}
-        run: brew install bash zsh
+        run: brew install bash
 
       - name: Bootstrap
         shell: bash
@@ -41,9 +41,10 @@ jobs:
 
       - name: Dry Run
         shell: bash
+        working-directory: cli
         run: |
-          cd cli
           tmpdir="$(mktemp -d)"
+          touch "$tmpdir/file.txt"
           npm run run -- "$tmpdir"
           rm -rf "$tmpdir"
 
