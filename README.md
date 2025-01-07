@@ -58,6 +58,21 @@ Options:
   -j, --jobs     Count of cocurrent jobs to use (when set to "0" will use cpu-threads)  [number] [default: 0]
 ```
 
+## Dev dependencies
+
+Recommended software:
+
+- `make` - with this you can run tasks such as `make bootstrap/build/clean/test/...`, see `Makefile` for all supported targets)
+
+For native build:
+
+- Recent version of `NodeJS`, `Python`, `Ruby` runtimes - for exact tested versions check files `.xyz-version`.
+- `Git` (required for cloning dependencies)
+
+For docker build:
+
+- Docker
+
 ## License
 
 This project is licensed under the MIT License,
