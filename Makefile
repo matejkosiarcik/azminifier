@@ -30,6 +30,8 @@ bootstrap:
 		cd "$(PROJECT_DIR)/minifiers/python-vendor/pyminifier" && \
 		patch <minification.py.patch
 
+	gem install bundler
+
 	# Gitman package
 	cd "$(PROJECT_DIR)/docker-utils/dependencies/gitman" && \
 	PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -77,6 +79,8 @@ docker-build-multiarch:
 .PHONY: clean
 clean:
 	find "$(PROJECT_DIR)" -type d \( \
+		-name "bundle" -or \
+		-name ".bundle" -or \
 		-name "dist" -or \
 		-name "gitman-repositories" -or \
 		-name "node_modules" -or \

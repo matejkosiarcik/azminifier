@@ -1,0 +1,28 @@
+location: gitman-repositories/
+sources:
+  - repo: https://github.com/rbenv/rbenv-installer.git
+    name: rbenv-installer
+    rev: main
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
+sources_locked:
+  - repo: https://github.com/rbenv/rbenv-installer.git
+    name: rbenv-installer
+    rev: 826acc505a29535a5492f4673839c0cebd99b69f
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
+default_group: ""
+groups:
+  -
