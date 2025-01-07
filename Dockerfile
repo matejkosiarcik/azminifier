@@ -241,8 +241,7 @@ RUN chronic node --version && \
 FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--ruby--rbenv--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/rbenv-installer/gitman.yml ./
-RUN --mount=type=cache,target=/root/.gitcache \
-    gitman install --quiet && \
+RUN gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
 # Install ruby with rbenv
