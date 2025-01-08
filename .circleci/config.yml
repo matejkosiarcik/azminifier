@@ -49,6 +49,7 @@ jobs:
       - run:
           name: Install rbenv
           command: |
+            echo "$PATH"
             cd ./docker-utils/dependencies/gitman/rbenv-installer
             gitman install --quiet
             cd -
