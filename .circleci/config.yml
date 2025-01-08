@@ -44,10 +44,11 @@ jobs:
           name: Install gitman
           command: |
             python3 -m pip install --requirement ./docker-utils/dependencies/gitman/requirements.txt --target python-vendor --quiet
-            export PATH="$PWD/python-vendor/bin:$PATH"
-            export PYTHONPATH="$PWD/python-vendor"
       - run:
           name: Install rbenv
+          environment:
+            PATH: $PWD/python-vendor/bin:$PATH
+            PYTHONPATH: $PWD/python-vendor
           command: |
             echo "$PATH"
             cd ./docker-utils/dependencies/gitman/rbenv-installer
