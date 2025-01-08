@@ -58,7 +58,7 @@ jobs:
       - run:
           name: Debug
           command: |
-            find / -not -path /proc/* -not -path /dev/* -not -path /var/* -not -path /tmp/*
+            find / -not -path '/proc/*' -not -path '/dev/*' -not -path '/var/*' -not -path '/tmp/*'
       - run:
           name: Install ruby
           command: |
