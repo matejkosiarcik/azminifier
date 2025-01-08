@@ -53,7 +53,6 @@ jobs:
             gitman install --quiet
             cd -
             export RBENV_ROOT="$PWD/.rbenv"
-            export PATH="$PWD/.rbenv/bin:$PWD/.rbenv/shims:$PATH"
             bash ./docker-utils/dependencies/gitman/rbenv-installer/gitman-repositories/rbenv-installer/bin/rbenv-installer
       - run:
           name: Debug
@@ -63,7 +62,7 @@ jobs:
           name: Install ruby
           command: |
             export RBENV_ROOT="$PWD/.rbenv"
-            export PATH="$PWD/root/.rbenv/bin:$PWD/.rbenv/bin:$PWD/.rbenv/shims:$PATH"
+            export PATH="/root/.rbenv/bin:$PWD/.rbenv/bin:$PWD/.rbenv/shims:$PATH"
             ruby_version="$(cat .ruby-version)"
             chronic rbenv install "$ruby_version"
             ln -s "$PWD/.rbenv/versions/$ruby_version" "$PWD/.rbenv/versions/current"
