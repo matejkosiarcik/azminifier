@@ -52,11 +52,9 @@ jobs:
             cd ./docker-utils/dependencies/gitman/rbenv-installer
             gitman install --quiet
             cd -
-            ls -lah ./docker-utils/dependencies/gitman/rbenv-installer
-            find ./docker-utils/dependencies/gitman/rbenv-installer -type f
             export RBENV_ROOT="$PWD/.rbenv"
             export PATH="$PWD/.rbenv/bin:$PWD/.rbenv/shims:$PATH"
-            bash ./docker-utils/dependencies/gitman/rbenv-installer/bin/rbenv-installer
+            bash ./docker-utils/dependencies/gitman/rbenv-installer/gitman-repositories/rbenv-installer/bin/rbenv-installer
       - run:
           name: Install ruby
           command: |
