@@ -253,7 +253,7 @@ RUN apt-get update -qq && \
         libffi-dev libgdbm-dev libncurses5-dev libreadline-dev libreadline-dev libssl-dev libyaml-dev zlib1g-dev >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=runtime--ruby--rbenv--gitman /app/gitman-repositories/rbenv-installer ./rbenv-installer
-ENV PATH="$PATH:/root/.rbenv/bin:/.rbenv/bin:/.rbenv/shims" \
+ENV PATH="/.rbenv/bin:/.rbenv/shims:$PATH" \
     RBENV_ROOT=/.rbenv
 RUN bash rbenv-installer/bin/rbenv-installer
 COPY ./docker-utils/build/rbenv-install-logging.sh /utils/
@@ -275,7 +275,7 @@ RUN apt-get update -qq && \
         libffi-dev libgdbm-dev libncurses5-dev libreadline-dev libreadline-dev libssl-dev libyaml-dev zlib1g-dev >/dev/null && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=runtime--ruby--rbenv--gitman /app/gitman-repositories/rbenv-installer ./rbenv-installer
-ENV PATH="$PATH:/root/.rbenv/bin:/.rbenv/bin:/.rbenv/shims" \
+ENV PATH="/.rbenv/bin:/.rbenv/shims:$PATH" \
     RBENV_ROOT=/.rbenv
 RUN bash rbenv-installer/bin/rbenv-installer
 COPY ./docker-utils/build/rbenv-install-logging.sh /utils/
