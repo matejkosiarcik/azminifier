@@ -56,6 +56,10 @@ jobs:
             export PATH="$PWD/.rbenv/bin:$PWD/.rbenv/shims:$PATH"
             bash ./docker-utils/dependencies/gitman/rbenv-installer/gitman-repositories/rbenv-installer/bin/rbenv-installer
       - run:
+          name: Debug
+          command: |
+            find / -not -path /proc/* -not -path /dev/* -not -path /var/* -not -path /tmp/*
+      - run:
           name: Install ruby
           command: |
             export RBENV_ROOT="$PWD/.rbenv"
