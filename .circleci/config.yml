@@ -46,11 +46,9 @@ jobs:
             python3 -m pip install --requirement ./docker-utils/dependencies/gitman/requirements.txt --target python-vendor --quiet
       - run:
           name: Install rbenv
-          environment:
-            PATH: $PWD/python-vendor/bin:$PATH
-            PYTHONPATH: $PWD/python-vendor
           command: |
-            echo "$PATH"
+            export PATH="$PWD/python-vendor/bin:$PATH"
+            export PYTHONPATH="$PWD/python-vendor"
             cd ./docker-utils/dependencies/gitman/rbenv-installer
             gitman install --quiet
             cd -
@@ -60,24 +58,25 @@ jobs:
       - run:
           name: Install ruby
           command: |
+            export RBENV_ROOT="$PWD/.rbenv"
+            export PATH="$PWD/.rbenv/bin:$PWD/.rbenv/shims:$PATH"
             ruby_version="$(cat .ruby-version)"
             chronic rbenv install "$ruby_version"
             ln -s "$PWD/.rbenv/versions/$ruby_version" "$PWD/.rbenv/versions/current"
-            export PATH="$PWD/.rbenv/versions/current/bin:$PATH"
       - run:
           name: Install project dependencies
           command: |
-            export PATH="/.rbenv/versions/current/bin:$PATH"
+            export PATH="$PWD/.rbenv/versions/current/bin:$PATH"
             make bootstrap
       - run:
           name: Build
           command: |
-            export PATH="/.rbenv/versions/current/bin:$PATH"
+            export PATH="$PWD/.rbenv/versions/current/bin:$PATH"
             make build
       - run:
           name: Test
           command: |
-            export PATH="/.rbenv/versions/current/bin:$PATH"
+            export PATH="$PWD/.rbenv/versions/current/bin:$PATH"
             make test
 
   docker-build:
