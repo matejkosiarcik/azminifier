@@ -290,7 +290,7 @@ RUN --mount=type=cache,target=/.rbenv/cache \
 
 ### Main CLI ###
 
-FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS cli--build
+FROM --platform=$BUILDPLATFORM node:23.6.0-slim AS cli--build
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -338,7 +338,7 @@ COPY --from=cli--build /app/dist/ ./dist/
 
 # NodeJS #
 
-FROM --platform=$BUILDPLATFORM node:23.5.0-slim AS minifiers--nodejs--build1
+FROM --platform=$BUILDPLATFORM node:23.6.0-slim AS minifiers--nodejs--build1
 WORKDIR /app/minifiers
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
