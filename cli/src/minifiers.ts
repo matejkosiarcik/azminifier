@@ -49,7 +49,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
     }[level];
     const command = await execa(['minify-xml', file, '--in-place', ...extraArgs], {
         env: {
-            PATH: `${paths.bin.nodeJs}${path.delimiter}${process.env['PATH']}`
+            PATH: `${paths.minifiers.nodeJs}${path.delimiter}${process.env['PATH']}`
         },
     });
     getStatusForCommand(command);
@@ -58,7 +58,7 @@ async function minifyXml(file: string, level: 'safe' | 'default' | 'brute'): Pro
 async function minifySvg(file: string): Promise<void> {
     const command = await execa(['svgo', '--input', file, '--output', file, '--config', path.join(paths.config, 'svgo.default.config.cjs')], {
         env: {
-            PATH: `${paths.bin.nodeJs}${path.delimiter}${process.env['PATH']}`
+            PATH: [paths.minifiers.nodeJs, process.env['PATH']].join(path.delimiter),
         },
     });
     getStatusForCommand(command);
@@ -74,8 +74,8 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
 
     const command = await execa(['pyminifier', ...extraArgs, `--outfile=${file}`, file], {
         env: {
-            PATH: `${paths.bin.python}${path.delimiter}${process.env['PATH']}`,
-            PYTHONPATH: path.dirname(paths.bin.python),
+            PATH: [paths.minifiers.python, process.env['PATH']].join(path.delimiter),
+            PYTHONPATH: path.dirname(paths.minifiers.python),
         },
     });
 
@@ -88,10 +88,24 @@ async function minifyPython(file: string, level: 'safe' | 'default' | 'brute'): 
     await fs.writeFile(filepath, newFileContent, 'utf8');
 }
 
+async function minifyRuby(file: string): Promise<void> {
+    const filepath = path.resolve(file);
+
+    const command = await execa(['bundle', 'exec', 'minifyrb', filepath, '--output', filepath], {
+        env: {
+            BUNDLE_GEMFILE: path.join(paths.minifiers.root, 'Gemfile'),
+            BUNDLE_PATH: path.join(paths.minifiers.root, 'bundle'),
+            PATH: [paths.runtimes.ruby, process.env['PATH']].join(path.delimiter),
+        },
+    });
+
+    getStatusForCommand(command);
+}
+
 async function minifyJavaScript(file: string): Promise<void> {
     const command = await execa(['terser', '--no-rename', file, '--output', file, '--config-file', path.join(paths.config, 'terser.default.config.json')], {
         env: {
-            PATH: `${paths.bin.nodeJs}${path.delimiter}${process.env['PATH']}`
+            PATH: `${paths.minifiers.nodeJs}${path.delimiter}${process.env['PATH']}`
         }
     });
 
@@ -129,6 +143,9 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
             }
             case 'py': {
                 return 'Python' as const;
+            }
+            case 'rb': {
+                return 'Ruby' as const;
             }
             case 'svg': {
                 return 'SVG' as const;
@@ -182,6 +199,10 @@ export async function minifyFile(file: string, options: { preset: 'safe' | 'defa
                 }
                 case 'Python': {
                     await minifyPython(file, options.preset);
+                    break;
+                }
+                case 'Ruby': {
+                    await minifyRuby(file);
                     break;
                 }
                 case 'Shell': {

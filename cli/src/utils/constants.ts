@@ -8,12 +8,15 @@ const repoRootPath = (() => {
 })();
 
 export const paths = {
-    minifierDirs: {
+    minifiers: {
+        root: path.join(repoRootPath, 'minifiers'),
+        nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
+        python: path.join(repoRootPath, 'minifiers', 'python-vendor', 'bin'),
+        ruby: path.join(repoRootPath, 'minifiers', 'bundle', 'bin'),
         shell: path.join(repoRootPath, 'minifiers', 'shell'),
     },
-    bin: {
-        python: path.join(repoRootPath, 'minifiers', 'python-vendor', 'bin'),
-        nodeJs: path.join(repoRootPath, 'minifiers', 'node_modules', '.bin'),
+    runtimes: {
+        ruby: path.join('/', '.rbenv', 'versions', 'current', 'bin'),
     },
     config: path.join(repoRootPath, 'minifiers', 'config'),
 };
