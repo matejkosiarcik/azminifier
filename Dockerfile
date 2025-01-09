@@ -13,7 +13,7 @@
 
 ## Gitman ##
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS component--gitman--base
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS helper--gitman--base
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -23,13 +23,13 @@ COPY ./docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target python-vendor --quiet
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS component--gitman--final
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS helper--gitman--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         ca-certificates git python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=component--gitman--base /app/ ./
+COPY --from=helper--gitman--base /app/ ./
 ENV PATH="/app/python-vendor/bin:$PATH" \
     PYTHONPATH=/app/python-vendor
 
@@ -37,13 +37,13 @@ ENV PATH="/app/python-vendor/bin:$PATH" \
 
 ## NodeJS runtime ##
 
-FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--nodenv--gitman
+FROM --platform=$BUILDPLATFORM helper--gitman--final AS runtime--nodejs--nodenv--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/nodenv/gitman.yml ./
 RUN gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--node-build--gitman
+FROM --platform=$BUILDPLATFORM helper--gitman--final AS runtime--nodejs--node-build--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/node-build/gitman.yml ./
 RUN gitman install --quiet && \
@@ -238,7 +238,7 @@ RUN chronic node --version && \
 ## Ruby runtime - rbenv ##
 
 # Rbenv installer
-FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--ruby--rbenv--gitman
+FROM --platform=$BUILDPLATFORM helper--gitman--final AS runtime--ruby--rbenv--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/rbenv-installer/gitman.yml ./
 RUN gitman install --quiet && \
@@ -290,7 +290,7 @@ RUN --mount=type=cache,target=/.rbenv/cache \
 
 ### Main CLI ###
 
-FROM --platform=$BUILDPLATFORM node:23.6.0-slim AS cli--build
+FROM --platform=$BUILDPLATFORM node:23.6.0-slim AS minifiers--cli--build
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -310,29 +310,29 @@ RUN npm run --silent build && \
 COPY ./docker-utils/prune-dependencies/prune-npm.sh docker-utils/prune-dependencies/.common.sh /utils/
 RUN sh /utils/prune-npm.sh
 
-FROM debian:12.8-slim AS cli--final
+FROM debian:12.8-slim AS minifiers--cli--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs npm \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=cli--build /app/node_modules ./node_modules
-COPY --from=cli--build /app/package.json ./package.json
-COPY --from=cli--build /app/dist/ ./dist/
+COPY --from=minifiers--cli--build /app/node_modules ./node_modules
+COPY --from=minifiers--cli--build /app/package.json ./package.json
+COPY --from=minifiers--cli--build /app/dist/ ./dist/
 COPY ./docker-utils/sanity-checks/check-minifiers-custom.sh /utils/check-minifiers-custom.sh
 RUN chronic sh /utils/check-minifiers-custom.sh
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--buildplatform--final
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--minifiers--cli--buildplatform--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs npm \
         >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=cli--build /app/node_modules ./node_modules
-COPY --from=cli--build /app/package.json ./package.json
-COPY --from=cli--build /app/dist/ ./dist/
+COPY --from=minifiers--cli--build /app/node_modules ./node_modules
+COPY --from=minifiers--cli--build /app/package.json ./package.json
+COPY --from=minifiers--cli--build /app/dist/ ./dist/
 
 ### 3rd party minifiers ###
 
@@ -538,7 +538,7 @@ RUN apt-get update -qq && \
 COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
-COPY --from=cli--buildplatform--final /app/ /app/
+COPY --from=minifiers--minifiers--cli--buildplatform--final /app/ /app/
 COPY --from=minifiers--nodejs--buildplatform--final /app/minifiers /app/minifiers
 COPY --from=minifiers--python--buildplatform--final /app/minifiers /app/minifiers
 COPY --from=minifiers--ruby--buildplatform--final /app/minifiers /app/minifiers
@@ -546,7 +546,7 @@ COPY --from=minifiers--ruby--buildplatform--final /.rbenv /.rbenv
 COPY --from=minifiers--shell--buildplatform--final /app/minifiers /app/minifiers
 COPY ./minifiers/config/terser.default.config.json ./minifiers/config/svgo.default.config.cjs /app/minifiers/config/
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS cli--minified
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--cli--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs python3 \
@@ -555,10 +555,10 @@ RUN apt-get update -qq && \
 COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY --from=minified--helper /app /app
 COPY --from=minified--helper /.rbenv /.rbenv
-COPY --from=cli--final /app /app-minified
+COPY --from=minifiers--cli--final /app /app-minified
 RUN chronic azminifier /app-minified
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS config--minified
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS minifiers--config--minified
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         moreutils nodejs python3 \
@@ -641,8 +641,8 @@ COPY --from=minified--helper /usr/bin/azminifier /usr/bin/azminifier
 COPY ./docker-utils/sanity-checks/check-system.sh /utils/
 RUN chronic sh /utils/check-system.sh
 COPY ./VERSION.txt /app/
-COPY --from=cli--minified /app-minified/ /app/
-COPY --from=config--minified /app-minified/minifiers/config/ /app/minifiers/config/
+COPY --from=minifiers--cli--minified /app-minified/ /app/
+COPY --from=minifiers--config--minified /app-minified/minifiers/config/ /app/minifiers/config/
 COPY --from=minifiers--nodejs--minified /app-minified/minifiers/ /app/minifiers/
 COPY --from=minifiers--python--minified /app-minified/minifiers/ /app/minifiers/
 COPY --from=minifiers--ruby--minified /app-minified/minifiers/ /app/minifiers/
