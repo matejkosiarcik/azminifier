@@ -13,7 +13,7 @@
 
 ## Gitman ##
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS component--gitman--base
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS helper--gitman--base
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
@@ -23,13 +23,13 @@ COPY ./docker-utils/dependencies/gitman/requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --requirement requirements.txt --target python-vendor --quiet
 
-FROM --platform=$BUILDPLATFORM debian:12.8-slim AS component--gitman--final
+FROM --platform=$BUILDPLATFORM debian:12.8-slim AS helper--gitman--final
 WORKDIR /app
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_TERSE=yes DEBCONF_NOWARNINGS=yes apt-get install -qq --yes --no-install-recommends \
         ca-certificates git python3 >/dev/null && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=component--gitman--base /app/ ./
+COPY --from=helper--gitman--base /app/ ./
 ENV PATH="/app/python-vendor/bin:$PATH" \
     PYTHONPATH=/app/python-vendor
 
@@ -37,13 +37,13 @@ ENV PATH="/app/python-vendor/bin:$PATH" \
 
 ## NodeJS runtime ##
 
-FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--nodenv--gitman
+FROM --platform=$BUILDPLATFORM helper--gitman--final AS runtime--nodejs--nodenv--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/nodenv/gitman.yml ./
 RUN gitman install --quiet && \
     find . -type d -name .git -prune -exec rm -rf {} \;
 
-FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--nodejs--node-build--gitman
+FROM --platform=$BUILDPLATFORM helper--gitman--final AS runtime--nodejs--node-build--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/node-build/gitman.yml ./
 RUN gitman install --quiet && \
@@ -238,7 +238,7 @@ RUN chronic node --version && \
 ## Ruby runtime - rbenv ##
 
 # Rbenv installer
-FROM --platform=$BUILDPLATFORM component--gitman--final AS runtime--ruby--rbenv--gitman
+FROM --platform=$BUILDPLATFORM helper--gitman--final AS runtime--ruby--rbenv--gitman
 WORKDIR /app
 COPY ./docker-utils/dependencies/gitman/rbenv-installer/gitman.yml ./
 RUN gitman install --quiet && \
