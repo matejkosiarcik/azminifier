@@ -24,7 +24,7 @@
     "modclean": "^3.0.0-beta.1",
     "npm-run-all2": "^7.0.2",
     "patch-package": "^8.0.0",
-    "rollup": "^4.34.8",
+    "rollup": "^4.34.9",
     "terser": "^5.39.0",
     "tsheredoc": "^1.0.1",
     "tsx": "^4.19.3",
