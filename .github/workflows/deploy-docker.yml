@@ -52,7 +52,7 @@ jobs:
 
       - name: Build and Publish
         id: build
-        uses: docker/build-push-action@v6.15.0
+        uses: docker/build-push-action@v6.16.0
         with:
           platforms: ${{ matrix.platform }}
           cache-from: type=gha
@@ -87,7 +87,7 @@ jobs:
       - build-images
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: digest-*
           path: /tmp/digests
