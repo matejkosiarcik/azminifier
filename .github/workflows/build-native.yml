@@ -23,12 +23,12 @@ jobs:
           node-version: latest
 
       - name: Setup Python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: 3.x
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.233.0
+        uses: ruby/setup-ruby@v1.235.0
         with:
           ruby-version: ruby # latest
 
