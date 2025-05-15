@@ -28,7 +28,7 @@ jobs:
           python-version: 3.x
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.238.0
+        uses: ruby/setup-ruby@v1.239.0
         with:
           ruby-version: ruby # latest
 
