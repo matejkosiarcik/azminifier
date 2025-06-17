@@ -25,7 +25,7 @@
     "npm-run-all2": "^8.0.4",
     "patch-package": "^8.0.0",
     "rollup": "^4.43.0",
-    "terser": "^5.42.0",
+    "terser": "^5.43.0",
     "tsheredoc": "^1.0.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
