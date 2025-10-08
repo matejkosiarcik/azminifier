@@ -28,6 +28,6 @@
     "terser": "^5.44.0",
     "tsheredoc": "^1.0.1",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   }
 }
