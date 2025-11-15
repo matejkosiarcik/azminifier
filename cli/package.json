@@ -20,7 +20,7 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@tsconfig/strictest": "^2.0.8",
     "@types/node": "^22.19.1",
-    "@types/yargs": "^17.0.34",
+    "@types/yargs": "^17.0.35",
     "modclean": "^3.0.0-beta.1",
     "npm-run-all2": "^8.0.4",
     "patch-package": "^8.0.1",
