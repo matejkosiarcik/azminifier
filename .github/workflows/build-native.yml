@@ -15,20 +15,20 @@ jobs:
     name: Build ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
 
       - name: Setup NodeJS
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.0.0
         with:
           node-version: latest
 
       - name: Setup Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: 3.x
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.254.0
+        uses: ruby/setup-ruby@v1.267.0
         with:
           ruby-version: ruby # latest
 
